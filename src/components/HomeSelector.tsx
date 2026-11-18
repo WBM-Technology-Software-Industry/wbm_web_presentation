@@ -36,7 +36,7 @@ export const HomeSelector: React.FC<HomeSelectorProps> = ({ onSelectMode }) => {
         </div>
 
         {/* Main Logo & Title - Stagger 2 & 3 */}
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           <div
             className={`flex justify-center transition-all duration-600 delay-200 ${
               mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
@@ -62,11 +62,11 @@ export const HomeSelector: React.FC<HomeSelectorProps> = ({ onSelectMode }) => {
           </h1>
 
           <p
-            className={`text-xs sm:text-sm md:text-base lg:text-lg text-zinc-300 max-w-2xl mx-auto leading-relaxed font-normal transition-all duration-600 delay-500 ${
+            className={`text-xs sm:text-sm md:text-base lg:text-lg text-zinc-300 max-w-2xl lg:max-w-3xl mx-auto leading-relaxed font-normal transition-all duration-600 delay-500 ${
               mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
             }`}
           >
-            Ajudamos empresas a melhorar o desempenho de suas operações por meio de engenharia, automação e tecnologias conectadas.
+            Ajudamos empresas que enfrentam desafios de monitoramento e controle a ter mais visibilidade, eficiência e domínio de suas operações por meio de soluções próprias de engenharia e tecnologia.
           </p>
         </div>
 
