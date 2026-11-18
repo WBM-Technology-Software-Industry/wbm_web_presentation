@@ -13,6 +13,9 @@ export const VerticalMode: React.FC = () => {
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
+    // Ensure viewport starts at top on entry
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+
     const handleScroll = () => {
       if (window.scrollY > 400) {
         setShowScrollTop(true);
@@ -48,10 +51,10 @@ export const VerticalMode: React.FC = () => {
   };
 
   return (
-    <div className="relative w-full bg-black min-h-screen text-white select-none">
+    <div className="relative w-full bg-black min-h-screen text-white">
       
       {/* Floating Side Dot Navigation for Desktop */}
-      <nav className="fixed right-4 sm:right-6 top-1/2 -translate-y-1/2 z-40 hidden md:flex flex-col gap-3.5 bg-black/70 backdrop-blur-md p-2.5 rounded-full border border-zinc-800 shadow-xl">
+      <nav className="fixed right-4 sm:right-6 top-1/2 -translate-y-1/2 z-40 hidden md:flex flex-col gap-3.5 bg-black/70 backdrop-blur-md p-2.5 rounded-full border border-zinc-800 shadow-xl select-none">
         {slidesMeta.map((slide) => (
           <button
             key={slide.id}

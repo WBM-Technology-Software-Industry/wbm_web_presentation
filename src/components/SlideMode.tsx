@@ -91,6 +91,13 @@ export const SlideMode: React.FC<SlideModeProps> = ({ isFullscreen, onToggleFull
 
   const handleTouchEnd = () => {
     if (!touchStart || !touchEnd) return;
+
+    // Prevent navigation if user is actively selecting text
+    const selection = window.getSelection();
+    if (selection && selection.toString().trim().length > 0) {
+      return;
+    }
+
     const distance = touchStart - touchEnd;
     const minSwipeDistance = 50;
 

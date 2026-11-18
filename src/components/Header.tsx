@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { SlidersHorizontal, ScrollText, Maximize2, Minimize2, Share2, MessageSquare, Check } from 'lucide-react';
+import { SlidersHorizontal, ScrollText, Maximize2, Minimize2, Share2, MessageSquare, Check, ArrowLeft } from 'lucide-react';
 import { contactInfo } from '../data/presentationData';
 
 interface HeaderProps {
-  currentMode: 'slides' | 'vertical';
+  currentMode: 'home' | 'slides' | 'vertical';
   onToggleMode: (mode: 'slides' | 'vertical') => void;
+  onReturnHome: () => void;
   isFullscreen: boolean;
   onToggleFullscreen: () => void;
 }
@@ -12,6 +13,7 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   currentMode,
   onToggleMode,
+  onReturnHome,
   isFullscreen,
   onToggleFullscreen,
 }) => {
@@ -45,12 +47,23 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="sticky top-0 z-50 w-full bg-black/90 backdrop-blur-md border-b border-zinc-800/80 px-3 sm:px-6 py-2.5 sm:py-3 select-none">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-4">
         
-        {/* Left: Brand Logo */}
-        <div className="flex items-center gap-3">
+        {/* Left: Home Return Button & Brand Logo */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {currentMode !== 'home' && (
+            <button
+              onClick={onReturnHome}
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-800 hover:border-[#00DF00]/60 text-zinc-300 hover:text-white text-xs sm:text-sm font-medium transition-all active:scale-95 group shadow-sm shrink-0"
+              title="Retornar à tela inicial de seleção"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#00DF00] group-hover:-translate-x-0.5 transition-transform shrink-0" />
+              <span>Início</span>
+            </button>
+          )}
+
           <button
-            onClick={() => onToggleMode('slides')}
+            onClick={onReturnHome}
             className="flex items-center gap-2 group text-left focus:outline-none"
-            title="WBM Technology"
+            title="WBM Technology — Tela Inicial"
           >
             <img
               src="/assets/wbm-logo-clean.png"

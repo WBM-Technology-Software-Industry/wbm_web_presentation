@@ -12,9 +12,9 @@ export const ImpactFooter: React.FC<ImpactFooterProps> = ({
   className = '',
 }) => {
   return (
-    <div className={`w-full relative mt-auto pt-4 sm:pt-6 pb-2 text-center select-none ${className}`}>
+    <div className={`w-full relative mt-auto pt-4 sm:pt-6 pb-2 text-center ${className}`}>
       {/* 3D Polygon Accent in bottom-right corner for desktop */}
-      <div className="absolute right-0 bottom-0 pointer-events-none hidden md:block opacity-85">
+      <div className="absolute right-0 bottom-0 pointer-events-none select-none hidden md:block opacity-85">
         <svg width="64" height="64" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
           <polygon points="40,5 75,25 75,65 40,85 5,65 5,25" fill="#00DF00" />
           <polygon points="40,5 75,25 75,65 40,45" fill="#009900" opacity="0.7" />

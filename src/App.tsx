@@ -15,7 +15,26 @@ export function App() {
     return 'home';
   });
 
+  const [slideSessionKey, setSlideSessionKey] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Sync browser back/forward buttons (History API)
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const modeParam = params.get('mode');
+      if (modeParam === 'slides' || modeParam === 'vertical') {
+        setCurrentMode(modeParam);
+      } else {
+        setCurrentMode('home');
+        setSlideSessionKey((prev) => prev + 1);
+      }
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   // Sync fullscreen state
   useEffect(() => {
@@ -41,18 +60,29 @@ export function App() {
 
   const handleModeChange = (mode: 'slides' | 'vertical') => {
     setCurrentMode(mode);
-    // Update URL param without page reload
+    setSlideSessionKey((prev) => prev + 1);
     const url = new URL(window.location.href);
     url.searchParams.set('mode', mode);
-    window.history.replaceState({}, '', url.toString());
+    window.history.pushState({ mode }, '', url.toString());
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  };
+
+  const handleReturnHome = () => {
+    setCurrentMode('home');
+    setSlideSessionKey((prev) => prev + 1);
+    const url = new URL(window.location.href);
+    url.searchParams.delete('mode');
+    window.history.pushState({ mode: 'home' }, '', url.pathname + (url.search ? url.search : '') + url.hash);
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   };
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col font-sans selection:bg-[#00DF00] selection:text-black">
       {/* Top Navigation Bar */}
       <Header
-        currentMode={currentMode === 'home' ? 'slides' : currentMode}
+        currentMode={currentMode}
         onToggleMode={handleModeChange}
+        onReturnHome={handleReturnHome}
         isFullscreen={isFullscreen}
         onToggleFullscreen={toggleFullscreen}
       />
@@ -65,13 +95,14 @@ export function App() {
 
         {currentMode === 'slides' && (
           <SlideMode
+            key={`slide-session-${slideSessionKey}`}
             isFullscreen={isFullscreen}
             onToggleFullscreen={toggleFullscreen}
           />
         )}
 
         {currentMode === 'vertical' && (
-          <VerticalMode />
+          <VerticalMode key={`vertical-session-${slideSessionKey}`} />
         )}
       </div>
     </div>
