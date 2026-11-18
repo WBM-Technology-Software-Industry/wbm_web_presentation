@@ -29,16 +29,16 @@ export const HomeSelector: React.FC<HomeSelectorProps> = ({ onSelectMode }) => {
             />
           </div>
 
-          <h1 className="text-xl sm:text-2xl md:text-4xl font-extrabold text-white tracking-tight font-heading">
-            Da informação ao controle.{' '}
+          <h1 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-extrabold text-white tracking-tight font-heading max-w-3xl mx-auto leading-tight">
+            Transformamos desafios industriais em{' '}
             <span className="text-[#00DF00] drop-shadow-[0_0_15px_rgba(0,223,0,0.6)]">
-              Do controle ao resultado.
+              soluções inteligentes
             </span>
+            .
           </h1>
 
-          <p className="text-xs sm:text-sm md:text-base text-zinc-400 max-w-xl mx-auto leading-relaxed">
-            Soluções completas de instrumentação, automação e IoT para a Indústria 4.0.
-            Escolha o formato que deseja explorar:
+          <p className="text-xs sm:text-sm md:text-base lg:text-lg text-zinc-300 max-w-2xl mx-auto leading-relaxed font-normal">
+            Ajudamos empresas a melhorar o desempenho de suas operações por meio de engenharia, automação e tecnologias conectadas.
           </p>
         </div>
 
