@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-black text-white selection:bg-[#00DF00] selection:text-black;
+  }
+}
+
+/* Hexagon clip path */
+.clip-hexagon {
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+}
+
+.clip-chevron {
+  clip-path: polygon(0% 0%, 75% 0%, 100% 50%, 75% 100%, 0% 100%, 25% 50%);
+}
+
+/* Custom glow utility */
+.glow-neon {
+  filter: drop-shadow(0 0 10px rgba(0, 223, 0, 0.45));
+}
+
+.glow-neon-lg {
+  filter: drop-shadow(0 0 20px rgba(0, 223, 0, 0.65));
+}
+
+/* Glassmorphism industrial card */
+.tech-card {
+  background: linear-gradient(135deg, rgba(16, 22, 16, 0.85) 0%, rgba(6, 8, 6, 0.95) 100%);
+  border: 1px solid rgba(0, 223, 0, 0.25);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tech-card:hover {
+  border-color: rgba(0, 223, 0, 0.7);
+  box-shadow: 0 0 24px rgba(0, 223, 0, 0.22);
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
