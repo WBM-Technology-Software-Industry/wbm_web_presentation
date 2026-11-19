@@ -16,6 +16,9 @@ import {
   ArrowLeft,
   Compass,
   ChevronRight,
+  Plus,
+  Minus,
+  RotateCcw,
 } from 'lucide-react';
 import { NetworkMeshBg } from '../ui/NetworkMeshBg';
 import { SolutionDetailPanel } from './SolutionDetailPanel';
@@ -68,6 +71,24 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
   const dragDistanceRef = useRef(0);
   const dragStartRef = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
 
+  // User zoom scale multiplier (supports ?zoom= for testing/deep-linking)
+  const [userZoom, setUserZoom] = useState<number>(() => {
+    if (typeof window === 'undefined') return 1.0;
+    const params = new URLSearchParams(window.location.search);
+    const z = parseFloat(params.get('zoom') || '1.0');
+    return !isNaN(z) && z > 0 ? z : 1.0;
+  });
+  const userZoomRef = useRef<number>(userZoom);
+  userZoomRef.current = userZoom;
+
+  // Multi-touch pinch-to-zoom tracking refs
+  const isPinchingRef = useRef(false);
+  const wasPinchingRef = useRef(false);
+  const pinchStartDistRef = useRef(0);
+  const pinchStartMidpointRef = useRef({ x: 0, y: 0 });
+  const pinchStartZoomRef = useRef(1.0);
+  const pinchStartPanRef = useRef({ x: 0, y: 0 });
+
   // Dynamic viewport measurement for exact bounding box framing
   const containerRef = useRef<HTMLDivElement>(null);
   const [viewportSize, setViewportSize] = useState(() => ({
@@ -105,6 +126,8 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
     setSelectedProductId(null);
     setHoveredProductId(null);
     setPanOffset({ x: 0, y: 0 });
+    setUserZoom(1.0);
+    userZoomRef.current = 1.0;
     if (typeof window !== 'undefined') {
       const url = new URL(window.location.href);
       url.searchParams.set('sector', universeId);
@@ -119,6 +142,8 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
     setSelectedProductId(null);
     setHoveredProductId(null);
     setPanOffset({ x: 0, y: 0 });
+    setUserZoom(1.0);
+    userZoomRef.current = 1.0;
     if (typeof window !== 'undefined') {
       const url = new URL(window.location.href);
       url.searchParams.delete('sector');
@@ -243,68 +268,6 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
     return UNIVERSES[uId].coord;
   };
 
-  // Pointer drag event handlers for fluid touch and mouse exploration
-  const handlePointerDown = (clientX: number, clientY: number) => {
-    isDraggingRef.current = true;
-    setIsDragging(true);
-    dragDistanceRef.current = 0;
-    dragStartRef.current = {
-      x: clientX,
-      y: clientY,
-      panX: panOffset.x,
-      panY: panOffset.y,
-    };
-  };
-
-  const handlePointerMove = (clientX: number, clientY: number) => {
-    if (!isDraggingRef.current) return;
-    const dx = (clientX - dragStartRef.current.x) / cameraScale;
-    const dy = (clientY - dragStartRef.current.y) / cameraScale;
-    dragDistanceRef.current = Math.hypot(
-      clientX - dragStartRef.current.x,
-      clientY - dragStartRef.current.y
-    );
-
-    let maxPanX = 300;
-    let minPanY = -240;
-    let maxPanY = 240;
-
-    if (selectedUniverseId) {
-      if (isMobile) {
-        maxPanX = 75;
-        const total = activeProducts.length;
-        const maxRows = Math.ceil(total / 2);
-        const maxDown = total <= 4 ? 40 : Math.max(120, maxRows * 76 - 180);
-        minPanY = -maxDown;
-        maxPanY = 50;
-      } else {
-        maxPanX = 450;
-        minPanY = -320;
-        maxPanY = 320;
-      }
-    } else {
-      if (isMobile) {
-        maxPanX = 50;
-        minPanY = -60;
-        maxPanY = 60;
-      } else {
-        maxPanX = 300;
-        minPanY = -240;
-        maxPanY = 240;
-      }
-    }
-
-    const newX = Math.max(-maxPanX, Math.min(maxPanX, dragStartRef.current.panX + dx));
-    const newY = Math.max(minPanY, Math.min(maxPanY, dragStartRef.current.panY + dy));
-
-    setPanOffset({ x: newX, y: newY });
-  };
-
-  const handlePointerUp = () => {
-    isDraggingRef.current = false;
-    setIsDragging(false);
-  };
-
   // Mobile Orbital Exploratory Layout for Child Solutions:
   // Dynamically arranges solutions vertically and radially below the active universe core.
   // Guarantees zero cutoff on portrait phone screens (360px - 430px), natural touch flow, and clear hierarchy.
@@ -415,42 +378,319 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
   const safeW = Math.max(320, viewportSize.width - (isMobile ? 24 : 60));
   const safeH = Math.max(300, viewportSize.height - (isMobile ? 70 : 60));
 
-  let cameraTranslateX = 0;
-  let cameraTranslateY = 0;
-  let cameraScale = 1;
+  let baseCameraScale = 1;
+  let baseTranslateX = 0;
+  let baseTranslateY = 0;
 
   if (!selectedUniverseId) {
     if (isMobile) {
       // Mobile Overview: cluster fits comfortably within portrait boundaries (cluster width: 320px, height: 450px)
       const fitW = (safeW - 16) / 320;
       const fitH = (safeH - 24) / 450;
-      cameraScale = Math.min(fitW, fitH, 0.95);
-      cameraScale = Math.max(0.78, cameraScale);
+      baseCameraScale = Math.min(fitW, fitH, 0.95);
+      baseCameraScale = Math.max(0.78, baseCameraScale);
     } else {
       const fitW = safeW / 680;
       const fitH = safeH / 470;
-      cameraScale = Math.min(fitW, fitH, 1.12);
-      cameraScale = Math.max(0.65, cameraScale);
+      baseCameraScale = Math.min(fitW, fitH, 1.12);
+      baseCameraScale = Math.max(0.65, baseCameraScale);
     }
-    cameraTranslateX = panOffset.x;
-    cameraTranslateY = panOffset.y;
+    baseTranslateX = 0;
+    baseTranslateY = 0;
   } else if (activeUniverse) {
     if (isMobile) {
       // Mobile Focused Universe: scale to comfortably fit 320px cluster width with safe margins
       const fitW = (safeW - 16) / 330;
-      cameraScale = Math.min(fitW, 0.95);
-      cameraScale = Math.max(0.82, cameraScale);
-      cameraTranslateX = panOffset.x;
-      cameraTranslateY = panOffset.y;
+      baseCameraScale = Math.min(fitW, 0.95);
+      baseCameraScale = Math.max(0.82, baseCameraScale);
+      baseTranslateX = 0;
+      baseTranslateY = 0;
     } else {
       const fitW = safeW / 890;
       const fitH = safeH / 430;
-      cameraScale = Math.min(fitW, fitH, 1.05);
-      cameraScale = Math.max(0.65, cameraScale);
-      cameraTranslateX = -activeUniverse.coord.x + panOffset.x;
-      cameraTranslateY = -activeUniverse.coord.y + panOffset.y;
+      baseCameraScale = Math.min(fitW, fitH, 1.05);
+      baseCameraScale = Math.max(0.65, baseCameraScale);
+      baseTranslateX = -activeUniverse.coord.x;
+      baseTranslateY = -activeUniverse.coord.y;
     }
   }
+
+  // Scale Limits (Etapa C.2)
+  const MIN_SCALE = 0.65;
+  const MAX_SCALE = 1.80;
+
+  // Effective camera scale
+  const cameraScale = isMobile
+    ? Math.max(MIN_SCALE, Math.min(MAX_SCALE, baseCameraScale * userZoom))
+    : baseCameraScale;
+
+  const cameraTranslateX = baseTranslateX + panOffset.x;
+  const cameraTranslateY = baseTranslateY + panOffset.y;
+
+  // Dynamic pan bounds responsive to current scale
+  const getPanBounds = useCallback(
+    (scale: number) => {
+      const zoomFactor = Math.max(1, scale / baseCameraScale);
+      let maxPanX = 300;
+      let minPanY = -240;
+      let maxPanY = 240;
+
+      if (selectedUniverseId) {
+        if (isMobile) {
+          maxPanX = 75 + (zoomFactor - 1) * 110;
+          const total = activeProducts.length;
+          const maxRows = Math.ceil(total / 2);
+          const maxDown = total <= 4 ? 50 : Math.max(130, maxRows * 76 - 170);
+          minPanY = -(maxDown + (zoomFactor - 1) * 160);
+          maxPanY = 50 + (zoomFactor - 1) * 80;
+        } else {
+          maxPanX = 450;
+          minPanY = -320;
+          maxPanY = 320;
+        }
+      } else {
+        if (isMobile) {
+          maxPanX = 50 + (zoomFactor - 1) * 100;
+          minPanY = -(60 + (zoomFactor - 1) * 120);
+          maxPanY = 60 + (zoomFactor - 1) * 120;
+        } else {
+          maxPanX = 300;
+          minPanY = -240;
+          maxPanY = 240;
+        }
+      }
+
+      return { maxPanX, minPanY, maxPanY };
+    },
+    [baseCameraScale, selectedUniverseId, isMobile, activeProducts.length]
+  );
+
+  const applyPan = useCallback(
+    (targetX: number, targetY: number, scale = cameraScale) => {
+      const { maxPanX, minPanY, maxPanY } = getPanBounds(scale);
+      const clampedX = Math.max(-maxPanX, Math.min(maxPanX, targetX));
+      const clampedY = Math.max(minPanY, Math.min(maxPanY, targetY));
+      setPanOffset({ x: clampedX, y: clampedY });
+    },
+    [getPanBounds, cameraScale]
+  );
+
+  // Multi-Touch Handlers for 1-finger Pan and 2-finger Pinch-to-Zoom
+  const handleTouchStart = (e: React.TouchEvent<HTMLElement>) => {
+    if (e.touches.length === 1) {
+      // 1 Finger: Smooth spatial drag
+      isDraggingRef.current = true;
+      setIsDragging(true);
+      dragDistanceRef.current = 0;
+      dragStartRef.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+        panX: panOffset.x,
+        panY: panOffset.y,
+      };
+    } else if (e.touches.length >= 2) {
+      // 2 Fingers: Pinch-to-zoom with focal point invariant tracking
+      isPinchingRef.current = true;
+      wasPinchingRef.current = true;
+      isDraggingRef.current = true;
+      setIsDragging(true);
+
+      const t1 = e.touches[0];
+      const t2 = e.touches[1];
+      const dist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+      pinchStartDistRef.current = Math.max(10, dist);
+
+      const rect = containerRef.current?.getBoundingClientRect() || {
+        left: 0,
+        top: 0,
+        width: viewportSize.width,
+        height: viewportSize.height,
+      };
+      const midX = (t1.clientX + t2.clientX) / 2 - rect.left;
+      const midY = (t1.clientY + t2.clientY) / 2 - rect.top;
+
+      pinchStartMidpointRef.current = { x: midX, y: midY };
+      pinchStartZoomRef.current = userZoomRef.current;
+      pinchStartPanRef.current = { x: panOffset.x, y: panOffset.y };
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLElement>) => {
+    if (e.touches.length === 1 && !isPinchingRef.current) {
+      // 1-Finger Pan
+      if (!isDraggingRef.current) return;
+      const clientX = e.touches[0].clientX;
+      const clientY = e.touches[0].clientY;
+      const dx = (clientX - dragStartRef.current.x) / cameraScale;
+      const dy = (clientY - dragStartRef.current.y) / cameraScale;
+      dragDistanceRef.current = Math.hypot(
+        clientX - dragStartRef.current.x,
+        clientY - dragStartRef.current.y
+      );
+
+      applyPan(dragStartRef.current.panX + dx, dragStartRef.current.panY + dy, cameraScale);
+    } else if (e.touches.length >= 2 && isPinchingRef.current) {
+      // 2-Finger Pinch-to-Zoom + Pan
+      const t1 = e.touches[0];
+      const t2 = e.touches[1];
+      const currentDist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+      dragDistanceRef.current = 100; // Invalidate click on solutions
+
+      const scaleRatio = currentDist / pinchStartDistRef.current;
+      const rawUserZoom = pinchStartZoomRef.current * scaleRatio;
+      const minUserZoom = MIN_SCALE / baseCameraScale;
+      const maxUserZoom = MAX_SCALE / baseCameraScale;
+      const newUserZoom = Math.max(minUserZoom, Math.min(maxUserZoom, rawUserZoom));
+
+      const rect = containerRef.current?.getBoundingClientRect() || {
+        left: 0,
+        top: 0,
+        width: viewportSize.width,
+        height: viewportSize.height,
+      };
+      const currentMidX = (t1.clientX + t2.clientX) / 2 - rect.left;
+      const currentMidY = (t1.clientY + t2.clientY) / 2 - rect.top;
+
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+
+      const sOld = baseCameraScale * pinchStartZoomRef.current;
+      const sNew = baseCameraScale * newUserZoom;
+
+      // Focal Point Invariant:
+      // panNew = panStart + (midCurrent - center)/sNew - (midStart - center)/sOld
+      const panNewX =
+        pinchStartPanRef.current.x +
+        (currentMidX - centerX) / sNew -
+        (pinchStartMidpointRef.current.x - centerX) / sOld;
+      const panNewY =
+        pinchStartPanRef.current.y +
+        (currentMidY - centerY) / sNew -
+        (pinchStartMidpointRef.current.y - centerY) / sOld;
+
+      setUserZoom(newUserZoom);
+      userZoomRef.current = newUserZoom;
+      applyPan(panNewX, panNewY, sNew);
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent<HTMLElement>) => {
+    if (e.touches.length === 1 && isPinchingRef.current) {
+      // Transition from 2 fingers to 1 finger smoothly without jumping
+      isPinchingRef.current = false;
+      dragStartRef.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+        panX: panOffset.x,
+        panY: panOffset.y,
+      };
+    } else if (e.touches.length === 0) {
+      // All touches finished
+      isDraggingRef.current = false;
+      isPinchingRef.current = false;
+      setIsDragging(false);
+
+      // Keep wasPinchingRef true for 250ms to prevent accidental product clicks
+      setTimeout(() => {
+        wasPinchingRef.current = false;
+      }, 250);
+    }
+  };
+
+  // Mouse handlers for desktop and laptop
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+    isDraggingRef.current = true;
+    setIsDragging(true);
+    dragDistanceRef.current = 0;
+    dragStartRef.current = {
+      x: e.clientX,
+      y: e.clientY,
+      panX: panOffset.x,
+      panY: panOffset.y,
+    };
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDraggingRef.current) return;
+    const dx = (e.clientX - dragStartRef.current.x) / cameraScale;
+    const dy = (e.clientY - dragStartRef.current.y) / cameraScale;
+    dragDistanceRef.current = Math.hypot(
+      e.clientX - dragStartRef.current.x,
+      e.clientY - dragStartRef.current.y
+    );
+
+    applyPan(dragStartRef.current.panX + dx, dragStartRef.current.panY + dy, cameraScale);
+  };
+
+  const handleMouseUp = () => {
+    isDraggingRef.current = false;
+    setIsDragging(false);
+  };
+
+  // Discreet Zoom Controls Handlers
+  const handleZoomIn = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const maxZoom = MAX_SCALE / baseCameraScale;
+    const nextZoom = Math.min(maxZoom, userZoomRef.current * 1.25);
+    setUserZoom(nextZoom);
+    userZoomRef.current = nextZoom;
+    applyPan(panOffset.x, panOffset.y, baseCameraScale * nextZoom);
+  };
+
+  const handleZoomOut = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const minZoom = MIN_SCALE / baseCameraScale;
+    const nextZoom = Math.max(minZoom, userZoomRef.current * 0.8);
+    setUserZoom(nextZoom);
+    userZoomRef.current = nextZoom;
+    applyPan(panOffset.x, panOffset.y, baseCameraScale * nextZoom);
+  };
+
+  const handleResetView = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setUserZoom(1.0);
+    userZoomRef.current = 1.0;
+    setPanOffset({ x: 0, y: 0 });
+  };
+
+  const isViewModified =
+    Math.abs(userZoom - 1.0) > 0.04 ||
+    Math.abs(panOffset.x) > 15 ||
+    Math.abs(panOffset.y) > 15;
+
+  // Non-passive native event listener to strictly prevent browser whole-page pinch zoom
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const onTouchMoveNative = (e: TouchEvent) => {
+      if (e.touches.length > 1) {
+        if (e.cancelable) e.preventDefault();
+      }
+    };
+
+    const onWheelNative = (e: WheelEvent) => {
+      if (e.ctrlKey) {
+        if (e.cancelable) e.preventDefault();
+        const zoomDelta = e.deltaY > 0 ? 0.92 : 1.08;
+        const minUserZoom = MIN_SCALE / baseCameraScale;
+        const maxUserZoom = MAX_SCALE / baseCameraScale;
+        const nextZoom = Math.max(minUserZoom, Math.min(maxUserZoom, userZoomRef.current * zoomDelta));
+        setUserZoom(nextZoom);
+        userZoomRef.current = nextZoom;
+        applyPan(panOffset.x, panOffset.y, baseCameraScale * nextZoom);
+      }
+    };
+
+    container.addEventListener('touchmove', onTouchMoveNative, { passive: false });
+    container.addEventListener('wheel', onWheelNative, { passive: false });
+
+    return () => {
+      container.removeEventListener('touchmove', onTouchMoveNative);
+      container.removeEventListener('wheel', onWheelNative);
+    };
+  }, [baseCameraScale, applyPan, panOffset.x, panOffset.y]);
 
   return (
     <div className="relative w-full min-h-[calc(100vh-65px)] bg-black text-white flex flex-col justify-between overflow-hidden select-text">
@@ -525,16 +765,14 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
       {/* Main Interactive Stage with Touch and Mouse Panning */}
       <main
         ref={containerRef}
-        onTouchStart={(e) => handlePointerDown(e.touches[0].clientX, e.touches[0].clientY)}
-        onTouchMove={(e) => handlePointerMove(e.touches[0].clientX, e.touches[0].clientY)}
-        onTouchEnd={handlePointerUp}
-        onTouchCancel={handlePointerUp}
-        onMouseDown={(e) => {
-          if (e.button === 0) handlePointerDown(e.clientX, e.clientY);
-        }}
-        onMouseMove={(e) => handlePointerMove(e.clientX, e.clientY)}
-        onMouseUp={handlePointerUp}
-        onMouseLeave={handlePointerUp}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchEnd}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
         className={`relative flex-1 w-full overflow-hidden touch-none select-none ${
           isDragging ? 'cursor-grabbing' : 'cursor-grab'
         }`}
@@ -747,7 +985,10 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
 
             {/* CENTRAL HUB: WBM TECHNOLOGY NUCLEUS (Coordinates 0, 0) */}
             <div
-              onClick={handleBackToOverview}
+              onClick={() => {
+                if (dragDistanceRef.current > 8 || wasPinchingRef.current) return;
+                handleBackToOverview();
+              }}
               style={{
                 left: '500px',
                 top: '375px',
@@ -783,7 +1024,7 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
                 <div
                   key={uId}
                   onClick={() => {
-                    if (dragDistanceRef.current > 8) return;
+                    if (dragDistanceRef.current > 8 || wasPinchingRef.current) return;
                     handleSelectUniverse(uId);
                   }}
                   style={{
@@ -883,7 +1124,7 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
                       onBlur={() => setHoveredProductId(null)}
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (dragDistanceRef.current > 8) return;
+                        if (dragDistanceRef.current > 8 || wasPinchingRef.current) return;
                         handleSelectProduct(product.id);
                       }}
                       onKeyDown={(e) => {
@@ -963,11 +1204,11 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
         </div>
 
         {/* Mobile Navigation & Off-Screen Guidance HUD */}
-        {isMobile && selectedUniverseId && activeUniverse && (Math.abs(panOffset.x) > 20 || Math.abs(panOffset.y) > 20) && (
+        {isMobile && selectedUniverseId && activeUniverse && isViewModified && (
           <button
             onClick={(e) => {
               e.stopPropagation();
-              setPanOffset({ x: 0, y: 0 });
+              handleResetView();
             }}
             className="absolute top-2.5 left-1/2 -translate-x-1/2 z-50 px-3 py-1 rounded-full bg-zinc-950/95 border border-[#00DF00] text-white text-[10px] font-mono uppercase tracking-wider flex items-center gap-1.5 shadow-[0_0_15px_rgba(0,223,0,0.5)] backdrop-blur-md active:scale-95 transition-all"
             title="Recentralizar universo"
@@ -982,6 +1223,60 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
           <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-40 pointer-events-none px-3 py-1 rounded-full bg-zinc-950/80 border border-zinc-800/80 text-zinc-400 text-[10px] font-mono tracking-wide flex items-center gap-1.5 backdrop-blur-sm">
             <span className="w-1.5 h-1.5 rounded-full bg-[#00DF00] animate-pulse" />
             <span>Toque em um setor para explorar</span>
+          </div>
+        )}
+
+        {/* Mobile Tactile Zoom Controls HUD */}
+        {isMobile && (
+          <div
+            className="absolute right-3.5 bottom-6 z-40 flex flex-col items-center bg-zinc-950/90 border border-zinc-800/90 rounded-2xl p-1 shadow-[0_4px_20px_rgba(0,0,0,0.8)] backdrop-blur-md gap-1 select-none"
+            onClick={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
+          >
+            {/* Zoom In Button */}
+            <button
+              onClick={handleZoomIn}
+              disabled={cameraScale >= MAX_SCALE - 0.02}
+              className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold transition-all active:scale-90 ${
+                cameraScale >= MAX_SCALE - 0.02
+                  ? 'text-zinc-600 cursor-not-allowed'
+                  : 'text-zinc-300 hover:text-[#00DF00] hover:bg-zinc-900 active:bg-zinc-800'
+              }`}
+              title="Aproximar mapa (+)"
+              aria-label="Aproximar zoom"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+
+            {/* Reset / Center Framing Button */}
+            <button
+              onClick={handleResetView}
+              className={`w-8 h-8 rounded-xl flex items-center justify-center text-[10px] font-mono transition-all active:scale-90 ${
+                isViewModified
+                  ? 'text-[#00DF00] bg-[#00DF00]/15 border border-[#00DF00]/40 shadow-[0_0_10px_rgba(0,223,0,0.3)] animate-pulse-subtle'
+                  : 'text-zinc-500 hover:text-zinc-300'
+              }`}
+              title="Restaurar enquadramento inicial"
+              aria-label="Centralizar e restaurar enquadramento"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+            </button>
+
+            {/* Zoom Out Button */}
+            <button
+              onClick={handleZoomOut}
+              disabled={cameraScale <= MIN_SCALE + 0.02}
+              className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold transition-all active:scale-90 ${
+                cameraScale <= MIN_SCALE + 0.02
+                  ? 'text-zinc-600 cursor-not-allowed'
+                  : 'text-zinc-300 hover:text-[#00DF00] hover:bg-zinc-900 active:bg-zinc-800'
+              }`}
+              title="Afastar mapa (−)"
+              aria-label="Afastar zoom"
+            >
+              <Minus className="w-4 h-4" />
+            </button>
           </div>
         )}
       </main>
