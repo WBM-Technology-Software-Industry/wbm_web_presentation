@@ -44,7 +44,7 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-black/90 backdrop-blur-md border-b border-zinc-800/80 px-3 sm:px-6 py-2.5 sm:py-3 select-none">
+    <header className="sticky top-0 z-50 w-full max-w-full bg-black/90 backdrop-blur-md border-b border-zinc-800/80 px-2.5 sm:px-6 py-2 sm:py-3 select-none overflow-x-hidden">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-4">
         
         {/* Left: Home Return Button & Brand Logo */}
@@ -52,11 +52,11 @@ export const Header: React.FC<HeaderProps> = ({
           {currentMode !== 'home' && (
             <button
               onClick={onReturnHome}
-              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-800 hover:border-[#00DF00]/60 text-zinc-300 hover:text-white text-xs sm:text-sm font-medium transition-all active:scale-95 group shadow-sm shrink-0"
+              className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-800 hover:border-[#00DF00]/60 text-zinc-300 hover:text-white text-xs sm:text-sm font-medium transition-all active:scale-95 group shadow-sm shrink-0"
               title="Retornar à tela inicial de seleção"
             >
               <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#00DF00] group-hover:-translate-x-0.5 transition-transform shrink-0" />
-              <span>Início</span>
+              <span className="hidden sm:inline">Início</span>
             </button>
           )}
 
@@ -68,7 +68,7 @@ export const Header: React.FC<HeaderProps> = ({
             <img
               src="/assets/wbm-logo-clean.png"
               alt="WBM Technology"
-              className="h-7 sm:h-9 w-auto object-contain drop-shadow-[0_0_8px_rgba(0,223,0,0.4)] group-hover:drop-shadow-[0_0_12px_rgba(0,223,0,0.7)] transition-all"
+              className="h-6 sm:h-9 w-auto object-contain drop-shadow-[0_0_8px_rgba(0,223,0,0.4)] group-hover:drop-shadow-[0_0_12px_rgba(0,223,0,0.7)] transition-all"
             />
           </button>
         </div>
@@ -77,14 +77,14 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center bg-zinc-950 p-1 rounded-full border border-zinc-800 shadow-inner">
           <button
             onClick={() => onToggleMode('slides')}
-            className={`flex items-center gap-1.5 px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all duration-300 ${
+            className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all duration-300 ${
               currentMode === 'slides'
                 ? 'bg-[#00DF00] text-black shadow-[0_0_12px_rgba(0,223,0,0.5)]'
                 : 'text-zinc-400 hover:text-white'
             }`}
           >
             <SlidersHorizontal className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            <span>Slides</span>
+            <span className="hidden sm:inline">Slides</span>
           </button>
 
           <button
@@ -96,7 +96,7 @@ export const Header: React.FC<HeaderProps> = ({
             }`}
           >
             <ScrollText className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            <span>Vertical</span>
+            <span className="hidden sm:inline">Vertical</span>
           </button>
 
           <button
@@ -108,7 +108,7 @@ export const Header: React.FC<HeaderProps> = ({
             }`}
           >
             <Compass className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            <span>Portfólio</span>
+            <span className="hidden sm:inline">Portfólio</span>
           </button>
         </div>
 

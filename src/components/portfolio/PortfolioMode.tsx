@@ -55,14 +55,25 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
     return h ? (h as ProductId) : null;
   });
 
-  // Default to list view on small mobile viewports
-  const [mobileTab, setMobileTab] = useState<'map' | 'list'>(() => {
-    return typeof window !== 'undefined' && window.innerWidth < 768 ? 'list' : 'map';
+  // Touch and Drag Panning State for fluid spatial navigation (supports ?panX= & ?panY= for testing/deep-linking)
+  const [panOffset, setPanOffset] = useState(() => {
+    if (typeof window === 'undefined') return { x: 0, y: 0 };
+    const params = new URLSearchParams(window.location.search);
+    const px = parseFloat(params.get('panX') || '0');
+    const py = parseFloat(params.get('panY') || '0');
+    return { x: isNaN(px) ? 0 : px, y: isNaN(py) ? 0 : py };
   });
+  const [isDragging, setIsDragging] = useState(false);
+  const isDraggingRef = useRef(false);
+  const dragDistanceRef = useRef(0);
+  const dragStartRef = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
 
   // Dynamic viewport measurement for exact bounding box framing
   const containerRef = useRef<HTMLDivElement>(null);
-  const [viewportSize, setViewportSize] = useState({ width: 1200, height: 700 });
+  const [viewportSize, setViewportSize] = useState(() => ({
+    width: typeof window !== 'undefined' ? window.innerWidth : 1200,
+    height: typeof window !== 'undefined' ? window.innerHeight : 700,
+  }));
 
   useEffect(() => {
     const updateSize = () => {
@@ -93,6 +104,7 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
     setSelectedUniverseId(universeId);
     setSelectedProductId(null);
     setHoveredProductId(null);
+    setPanOffset({ x: 0, y: 0 });
     if (typeof window !== 'undefined') {
       const url = new URL(window.location.href);
       url.searchParams.set('sector', universeId);
@@ -106,6 +118,7 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
     setSelectedUniverseId(null);
     setSelectedProductId(null);
     setHoveredProductId(null);
+    setPanOffset({ x: 0, y: 0 });
     if (typeof window !== 'undefined') {
       const url = new URL(window.location.href);
       url.searchParams.delete('sector');
@@ -206,7 +219,161 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
     }
   };
 
-  // Adaptive Bilateral Layout for Child Solutions:
+  const isMobile = viewportSize.width < 768;
+
+  // Mobile Overview Coordinates for the 6 Universes (Vertical Ellipse around IoT nucleus at 0, 0)
+  const MOBILE_OVERVIEW_COORDS: Record<UniverseId, { x: number; y: number }> = {
+    saneamento: { x: 0, y: -195 },
+    industria: { x: 80, y: -95 },
+    piscicultura: { x: 80, y: 95 },
+    bioflorestal: { x: 0, y: 195 },
+    energia: { x: -80, y: 95 },
+    'pesquisa-laboratorios': { x: -80, y: -95 },
+  };
+
+  // Universe position resolver based on device mode and selection state
+  const getUniverseCoords = (uId: UniverseId) => {
+    if (isMobile) {
+      if (selectedUniverseId === uId) {
+        const count = getProductsByUniverse(uId).length;
+        return { x: 0, y: count <= 4 ? -75 : -105 };
+      }
+      return MOBILE_OVERVIEW_COORDS[uId];
+    }
+    return UNIVERSES[uId].coord;
+  };
+
+  // Pointer drag event handlers for fluid touch and mouse exploration
+  const handlePointerDown = (clientX: number, clientY: number) => {
+    isDraggingRef.current = true;
+    setIsDragging(true);
+    dragDistanceRef.current = 0;
+    dragStartRef.current = {
+      x: clientX,
+      y: clientY,
+      panX: panOffset.x,
+      panY: panOffset.y,
+    };
+  };
+
+  const handlePointerMove = (clientX: number, clientY: number) => {
+    if (!isDraggingRef.current) return;
+    const dx = (clientX - dragStartRef.current.x) / cameraScale;
+    const dy = (clientY - dragStartRef.current.y) / cameraScale;
+    dragDistanceRef.current = Math.hypot(
+      clientX - dragStartRef.current.x,
+      clientY - dragStartRef.current.y
+    );
+
+    let maxPanX = 300;
+    let minPanY = -240;
+    let maxPanY = 240;
+
+    if (selectedUniverseId) {
+      if (isMobile) {
+        maxPanX = 75;
+        const total = activeProducts.length;
+        const maxRows = Math.ceil(total / 2);
+        const maxDown = total <= 4 ? 40 : Math.max(120, maxRows * 76 - 180);
+        minPanY = -maxDown;
+        maxPanY = 50;
+      } else {
+        maxPanX = 450;
+        minPanY = -320;
+        maxPanY = 320;
+      }
+    } else {
+      if (isMobile) {
+        maxPanX = 50;
+        minPanY = -60;
+        maxPanY = 60;
+      } else {
+        maxPanX = 300;
+        minPanY = -240;
+        maxPanY = 240;
+      }
+    }
+
+    const newX = Math.max(-maxPanX, Math.min(maxPanX, dragStartRef.current.panX + dx));
+    const newY = Math.max(minPanY, Math.min(maxPanY, dragStartRef.current.panY + dy));
+
+    setPanOffset({ x: newX, y: newY });
+  };
+
+  const handlePointerUp = () => {
+    isDraggingRef.current = false;
+    setIsDragging(false);
+  };
+
+  // Mobile Orbital Exploratory Layout for Child Solutions:
+  // Dynamically arranges solutions vertically and radially below the active universe core.
+  // Guarantees zero cutoff on portrait phone screens (360px - 430px), natural touch flow, and clear hierarchy.
+  const getSolutionMobileOrbitalPosition = (
+    idx: number,
+    total: number,
+    center: { x: number; y: number }
+  ) => {
+    const pillHalfWidth = 78; // w-[156px]
+    const pillHalfHeight = 21;
+
+    if (total <= 4) {
+      if (total === 3) {
+        // 3 items (Energia)
+        if (idx === 0) {
+          const x = -80;
+          const y = center.y + 75;
+          return { x, y, isLeft: true, edgeX: x + pillHalfWidth, edgeY: y };
+        } else if (idx === 1) {
+          const x = 80;
+          const y = center.y + 75;
+          return { x, y, isLeft: false, edgeX: x - pillHalfWidth, edgeY: y };
+        } else {
+          const x = 0;
+          const y = center.y + 152;
+          return { x, y, isLeft: false, edgeX: x, edgeY: y - pillHalfHeight };
+        }
+      } else {
+        // 4 items (Pesquisa, Bioflorestal, Piscicultura)
+        const row = Math.floor(idx / 2);
+        const isLeft = idx % 2 === 0;
+        const x = isLeft ? -80 : 80;
+        const y = center.y + 72 + row * 78;
+        const edgeX = isLeft ? x + pillHalfWidth : x - pillHalfWidth;
+        return { x, y, isLeft, edgeX, edgeY: y };
+      }
+    }
+
+    // High product count (11 in Saneamento, 13 in Indústria)
+    const row = Math.floor(idx / 2);
+    const isLastOdd = idx === total - 1 && total % 2 !== 0;
+
+    if (isLastOdd) {
+      const x = 0;
+      const y = center.y + 72 + row * 76;
+      return {
+        x,
+        y,
+        isLeft: false,
+        edgeX: x,
+        edgeY: y - pillHalfHeight,
+      };
+    }
+
+    const isLeft = idx % 2 === 0;
+    const x = isLeft ? -80 : 80;
+    const y = center.y + 72 + row * 76;
+    const edgeX = isLeft ? x + pillHalfWidth : x - pillHalfWidth;
+
+    return {
+      x,
+      y,
+      isLeft,
+      edgeX,
+      edgeY: y,
+    };
+  };
+
+  // Desktop Adaptive Bilateral Layout for Child Solutions (PRESERVED UNCHANGED):
   // Distributes products in symmetrical Left and Right flanking columns anchored to the universe node.
   // Guarantees ZERO collision between labels, generous clearance with the universe node, and fits any screen.
   const getSolutionBilateralPosition = (idx: number, total: number, center: { x: number; y: number }) => {
@@ -214,13 +381,9 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
     const totalRight = Math.floor(total / 2);
     const isLeft = idx < totalLeft;
 
-    // Symmetrical column offsets:
-    // With card width of 264px (half-width = 132px):
-    // colOffsetX = 295px provides 58px clearance from universe central node (w-[210px], half-width = 105px).
     const colOffsetX = 295;
     const pillHalfWidth = 132;
 
-    // Harmonious vertical spacing adapting to item count per column:
     const maxItems = Math.max(totalLeft, totalRight);
     const stepY = maxItems <= 2 ? 70 : maxItems <= 4 ? 64 : maxItems <= 6 ? 56 : 52;
 
@@ -248,31 +411,45 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
   };
 
   // Dynamic Camera Zoom & Framing Computation:
-  // Computes exact scale based on real container viewport to guarantee zero clipping of Saneamento, Bioflorestal, or solutions.
-  const safeW = Math.max(320, viewportSize.width - 60);
-  const safeH = Math.max(300, viewportSize.height - 60);
+  // Computes exact scale based on real container viewport to guarantee zero clipping.
+  const safeW = Math.max(320, viewportSize.width - (isMobile ? 24 : 60));
+  const safeH = Math.max(300, viewportSize.height - (isMobile ? 70 : 60));
 
   let cameraTranslateX = 0;
   let cameraTranslateY = 0;
   let cameraScale = 1;
 
   if (!selectedUniverseId) {
-    // Overview mode: Scene dimensions are approx 650px wide x 440px high
-    const fitW = safeW / 680;
-    const fitH = safeH / 470;
-    cameraScale = Math.min(fitW, fitH, 1.12);
-    cameraScale = Math.max(0.65, cameraScale);
-    cameraTranslateX = 0;
-    cameraTranslateY = 0;
+    if (isMobile) {
+      // Mobile Overview: cluster fits comfortably within portrait boundaries (cluster width: 320px, height: 450px)
+      const fitW = (safeW - 16) / 320;
+      const fitH = (safeH - 24) / 450;
+      cameraScale = Math.min(fitW, fitH, 0.95);
+      cameraScale = Math.max(0.78, cameraScale);
+    } else {
+      const fitW = safeW / 680;
+      const fitH = safeH / 470;
+      cameraScale = Math.min(fitW, fitH, 1.12);
+      cameraScale = Math.max(0.65, cameraScale);
+    }
+    cameraTranslateX = panOffset.x;
+    cameraTranslateY = panOffset.y;
   } else if (activeUniverse) {
-    // Focused Universe mode: Symmetrical cluster is approx 860px wide x 400px high
-    const fitW = safeW / 890;
-    const fitH = safeH / 430;
-    cameraScale = Math.min(fitW, fitH, 1.05);
-    cameraScale = Math.max(0.65, cameraScale);
-    // Center the camera directly on the active universe
-    cameraTranslateX = -activeUniverse.coord.x;
-    cameraTranslateY = -activeUniverse.coord.y;
+    if (isMobile) {
+      // Mobile Focused Universe: scale to comfortably fit 320px cluster width with safe margins
+      const fitW = (safeW - 16) / 330;
+      cameraScale = Math.min(fitW, 0.95);
+      cameraScale = Math.max(0.82, cameraScale);
+      cameraTranslateX = panOffset.x;
+      cameraTranslateY = panOffset.y;
+    } else {
+      const fitW = safeW / 890;
+      const fitH = safeH / 430;
+      cameraScale = Math.min(fitW, fitH, 1.05);
+      cameraScale = Math.max(0.65, cameraScale);
+      cameraTranslateX = -activeUniverse.coord.x + panOffset.x;
+      cameraTranslateY = -activeUniverse.coord.y + panOffset.y;
+    }
   }
 
   return (
@@ -281,8 +458,8 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
       <NetworkMeshBg />
 
       {/* Top Breadcrumb & Controls Bar */}
-      <header className="relative z-30 w-full bg-black/85 backdrop-blur-md border-b border-zinc-900 px-4 sm:px-8 py-2.5">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+      <header className="relative z-30 w-full max-w-full bg-black/85 backdrop-blur-md border-b border-zinc-900 px-3 sm:px-8 py-2 sm:py-2.5 overflow-hidden">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-3 min-w-0">
           
           {/* Breadcrumb Navigation */}
           <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm font-medium">
@@ -304,7 +481,8 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
               }`}
             >
               <Compass className="w-3.5 h-3.5" />
-              <span>Portfólio de Universos</span>
+              <span className="hidden sm:inline">Portfólio de Universos</span>
+              <span className="sm:hidden">Universos</span>
             </button>
 
             {activeUniverse && (
@@ -336,132 +514,33 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
                 title="Voltar à visão geral dos 6 universos"
               >
                 <Compass className="w-3.5 h-3.5 text-[#00DF00]" />
-                <span className="hidden sm:inline">Visão Geral</span>
+                <span>Visão Geral</span>
               </button>
             )}
-
-            {/* Mobile View Toggle */}
-            <div className="flex md:hidden bg-zinc-950 p-0.5 rounded-lg border border-zinc-800">
-              <button
-                onClick={() => setMobileTab('list')}
-                className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-all ${
-                  mobileTab === 'list' ? 'bg-[#00DF00] text-black font-bold' : 'text-zinc-400 hover:text-white'
-                }`}
-              >
-                Lista
-              </button>
-              <button
-                onClick={() => setMobileTab('map')}
-                className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-all ${
-                  mobileTab === 'map' ? 'bg-[#00DF00] text-black font-bold' : 'text-zinc-400 hover:text-white'
-                }`}
-              >
-                Mapa
-              </button>
-            </div>
           </div>
 
         </div>
       </header>
 
-      {/* Main Interactive Stage */}
+      {/* Main Interactive Stage with Touch and Mouse Panning */}
       <main
         ref={containerRef}
-        className="relative flex-1 w-full flex items-center justify-center overflow-hidden"
+        onTouchStart={(e) => handlePointerDown(e.touches[0].clientX, e.touches[0].clientY)}
+        onTouchMove={(e) => handlePointerMove(e.touches[0].clientX, e.touches[0].clientY)}
+        onTouchEnd={handlePointerUp}
+        onTouchCancel={handlePointerUp}
+        onMouseDown={(e) => {
+          if (e.button === 0) handlePointerDown(e.clientX, e.clientY);
+        }}
+        onMouseMove={(e) => handlePointerMove(e.clientX, e.clientY)}
+        onMouseUp={handlePointerUp}
+        onMouseLeave={handlePointerUp}
+        className={`relative flex-1 w-full overflow-hidden touch-none select-none ${
+          isDragging ? 'cursor-grabbing' : 'cursor-grab'
+        }`}
       >
-        
-        {/* MOBILE VIEW ALTERNATIVE (Optimized list presentation for 390x844 & 430x932) */}
-        {mobileTab === 'list' && (
-          <div className="md:hidden relative z-20 w-full h-full p-4 overflow-y-auto space-y-4">
-            <div className="text-center pb-2">
-              <h2 className="text-lg font-bold text-white font-heading">
-                Universos de Atuação
-              </h2>
-              <p className="text-xs text-zinc-400 mt-0.5">
-                Selecione um setor para explorar os desafios e soluções WBM
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 gap-3">
-              {(Object.keys(UNIVERSES) as UniverseId[]).map((uId) => {
-                const u = UNIVERSES[uId];
-                const count = getProductsByUniverse(uId).length;
-                const isSelected = selectedUniverseId === uId;
-                const sectorProducts = getProductsByUniverse(uId);
-
-                return (
-                  <div
-                    key={uId}
-                    className={`rounded-xl p-4 border transition-all ${
-                      isSelected
-                        ? 'bg-zinc-900 border-[#00DF00] shadow-[0_0_20px_rgba(0,223,0,0.25)]'
-                        : 'bg-zinc-950/90 border-zinc-800 hover:border-zinc-700'
-                    }`}
-                  >
-                    <div
-                      onClick={() => handleSelectUniverse(uId)}
-                      className="flex items-center justify-between cursor-pointer"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-[#00DF00]/15 border border-[#00DF00]/50 flex items-center justify-center text-[#00DF00]">
-                          {renderUniverseIcon(u.iconName, 'w-5 h-5')}
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-bold text-white font-heading">{u.name}</h3>
-                          <p className="text-[11px] text-zinc-400">{u.tagline}</p>
-                        </div>
-                      </div>
-                      <span className="text-xs font-mono text-[#00DF00] bg-black/60 px-2 py-0.5 rounded-full border border-zinc-800">
-                        {count} soluções
-                      </span>
-                    </div>
-
-                    {isSelected && (
-                      <div className="mt-3 pt-3 border-t border-zinc-800/80 space-y-3">
-                        <p className="text-xs text-zinc-300 leading-relaxed">{u.description}</p>
-                        <div>
-                          <span className="text-[10px] font-mono uppercase tracking-wider text-[#00DF00] block mb-2">
-                            Soluções disponíveis ({count}):
-                          </span>
-                          <div className="grid grid-cols-1 gap-2">
-                            {sectorProducts.map(({ product, context }) => (
-                              <button
-                                key={product.id}
-                                onClick={() => {
-                                  handleSelectProduct(product.id);
-                                }}
-                                className={`w-full p-2.5 rounded-lg text-left text-xs border transition-all flex items-center justify-between gap-2 ${
-                                  selectedProductId === product.id
-                                    ? 'bg-[#00DF00] text-black border-[#00DF00] font-bold shadow-[0_0_12px_rgba(0,223,0,0.4)]'
-                                    : 'bg-black/90 border-zinc-800 text-zinc-200 hover:border-[#00DF00]/60'
-                                }`}
-                              >
-                                <div>
-                                  <div className="font-bold font-heading">{product.name}</div>
-                                  <div className={`text-[10px] truncate font-medium ${selectedProductId === product.id ? 'text-black/85 font-semibold' : 'text-[#00DF00]'}`}>
-                                    {context.shortLabelOverride || product.shortLabel}
-                                  </div>
-                                </div>
-                                <ChevronRight className={`w-4 h-4 shrink-0 ${selectedProductId === product.id ? 'text-black' : 'text-[#00DF00]'}`} />
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* CINEMATIC CONTINUOUS SPATIAL CANVAS (Desktop & Tablet & Full Map View) */}
-        <div
-          className={`relative w-full h-full flex items-center justify-center ${
-            mobileTab === 'list' ? 'hidden md:flex' : 'flex'
-          }`}
-        >
+        {/* CINEMATIC CONTINUOUS SPATIAL CANVAS */}
+        <div className="absolute inset-0 pointer-events-none">
           {/* Spatial World Container with Smooth Dynamic Camera Pan and Zoom */}
           <div
             className="absolute select-none pointer-events-auto"
@@ -471,8 +550,12 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
               left: 'calc(50% - 500px)',
               top: 'calc(50% - 375px)',
               transform: `scale(${cameraScale}) translate3d(${cameraTranslateX}px, ${cameraTranslateY}px, 0px)`,
-              transformOrigin: 'center center',
-              transition: prefersReducedMotion ? 'none' : 'transform 750ms cubic-bezier(0.16, 1, 0.3, 1)',
+              transformOrigin: '500px 375px',
+              transition: isDragging
+                ? 'none'
+                : prefersReducedMotion
+                ? 'none'
+                : 'transform 650ms cubic-bezier(0.16, 1, 0.3, 1)',
             }}
           >
             {/* SVG Vector Connections Layer */}
@@ -496,14 +579,14 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
               {!selectedUniverseId && (
                 <g className="transition-opacity duration-500">
                   {(Object.keys(UNIVERSES) as UniverseId[]).map((uId) => {
-                    const u = UNIVERSES[uId];
+                    const coord = getUniverseCoords(uId);
                     return (
                       <g key={`conn-${uId}`}>
                         <line
                           x1="0"
                           y1="0"
-                          x2={u.coord.x}
-                          y2={u.coord.y}
+                          x2={coord.x}
+                          y2={coord.y}
                           stroke="#00DF00"
                           strokeWidth="1.2"
                           strokeOpacity="0.35"
@@ -514,7 +597,7 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
                         {!prefersReducedMotion && (
                           <circle r="2" fill="#00DF00">
                             <animateMotion
-                              path={`M 0 0 L ${u.coord.x} ${u.coord.y}`}
+                              path={`M 0 0 L ${coord.x} ${coord.y}`}
                               dur="4s"
                               repeatCount="indefinite"
                             />
@@ -526,26 +609,52 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
                 </g>
               )}
 
-              {/* 2. Focused Universe: Smooth Bilateral Cybernetic Branching Lines to Solutions */}
+              {/* 2. Focused Universe: Smooth Cybernetic Branching Lines to Solutions */}
               {selectedUniverseId && activeUniverse && (
                 <g className="animate-fadeIn">
                   {activeProducts.map(({ product }, idx) => {
                     const total = activeProducts.length;
-                    const pos = getSolutionBilateralPosition(idx, total, activeUniverse.coord);
+                    const center = getUniverseCoords(activeUniverse.id);
+                    const pos = isMobile
+                      ? getSolutionMobileOrbitalPosition(idx, total, center)
+                      : getSolutionBilateralPosition(idx, total, center);
                     const isSolSelected = selectedProductId === product.id;
                     const isHovered = hoveredProductId === product.id;
                     const isTargeted = isSolSelected || isHovered;
                     const isOtherHovered = Boolean(hoveredProductId && hoveredProductId !== product.id);
 
-                    // Compute smooth curved bus from universe edge (half-width = 105px) to solution edge
-                    const originX = pos.isLeft ? activeUniverse.coord.x - 105 : activeUniverse.coord.x + 105;
-                    const originY = activeUniverse.coord.y;
-                    const destX = pos.edgeX;
-                    const destY = pos.edgeY;
-                    const controlX1 = pos.isLeft ? originX - 30 : originX + 30;
-                    const controlX2 = pos.isLeft ? destX + 30 : destX - 30;
+                    let originX = center.x;
+                    let originY = center.y;
+                    let destX = pos.edgeX;
+                    let destY = pos.edgeY;
+                    let curvePath = '';
 
-                    const curvePath = `M ${originX} ${originY} C ${controlX1} ${originY}, ${controlX2} ${destY}, ${destX} ${destY}`;
+                    if (isMobile) {
+                      // Mobile Orbital Port Routing: exits from bottom ports of active universe node
+                      if (pos.x < -20) {
+                        originX = center.x - 45;
+                        originY = center.y + 24;
+                      } else if (pos.x > 20) {
+                        originX = center.x + 45;
+                        originY = center.y + 24;
+                      } else {
+                        originX = center.x;
+                        originY = center.y + 24;
+                      }
+                      const midY = (originY + destY) / 2;
+                      curvePath = `M ${originX} ${originY} C ${originX} ${midY}, ${destX} ${midY}, ${destX} ${destY}`;
+                    } else {
+                      // Desktop Bilateral Port Routing (Unchanged!)
+                      const universeHalfWidth = 105;
+                      originX = pos.isLeft ? center.x - universeHalfWidth : center.x + universeHalfWidth;
+                      originY = center.y;
+                      destX = pos.edgeX;
+                      destY = pos.edgeY;
+                      const controlOffset = 30;
+                      const controlX1 = pos.isLeft ? originX - controlOffset : originX + controlOffset;
+                      const controlX2 = pos.isLeft ? destX + controlOffset : destX - controlOffset;
+                      curvePath = `M ${originX} ${originY} C ${controlX1} ${originY}, ${controlX2} ${destY}, ${destX} ${destY}`;
+                    }
 
                     // Dynamic stroke styling based on interaction state
                     let strokeWidth = '1.2';
@@ -649,14 +758,14 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
                   : 'opacity-100 scale-100 cursor-pointer'
               }`}
             >
-              <div className="absolute w-40 h-40 rounded-full bg-[#00DF00]/10 blur-xl pointer-events-none animate-pulse-subtle" />
-              <div className="relative w-28 h-28 rounded-3xl bg-gradient-to-b from-zinc-900 via-zinc-950 to-black border-2 border-[#00DF00] flex flex-col items-center justify-center p-3 shadow-[0_0_35px_rgba(0,223,0,0.4)] hover:shadow-[0_0_45px_rgba(0,223,0,0.65)] hover:border-[#00ff00] transition-all duration-300">
+              <div className="absolute w-36 sm:w-40 h-36 sm:h-40 rounded-full bg-[#00DF00]/10 blur-xl pointer-events-none animate-pulse-subtle" />
+              <div className="relative w-22 sm:w-28 h-22 sm:h-28 rounded-2xl sm:rounded-3xl bg-gradient-to-b from-zinc-900 via-zinc-950 to-black border-2 border-[#00DF00] flex flex-col items-center justify-center p-2.5 sm:p-3 shadow-[0_0_35px_rgba(0,223,0,0.4)] hover:shadow-[0_0_45px_rgba(0,223,0,0.65)] hover:border-[#00ff00] transition-all duration-300">
                 <img
                   src="/assets/wbm-logo-clean.png"
                   alt="WBM Technology"
-                  className="w-20 h-auto object-contain drop-shadow-[0_0_12px_rgba(0,223,0,0.5)]"
+                  className="w-16 sm:w-20 h-auto object-contain drop-shadow-[0_0_12px_rgba(0,223,0,0.5)]"
                 />
-                <span className="text-[9px] font-mono tracking-widest text-[#00DF00] uppercase mt-1">
+                <span className="text-[8px] sm:text-[9px] font-mono tracking-widest text-[#00DF00] uppercase mt-0.5 sm:mt-1">
                   NÚCLEO IoT
                 </span>
               </div>
@@ -668,14 +777,18 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
               const isSelected = selectedUniverseId === uId;
               const isDimmed = selectedUniverseId !== null && !isSelected;
               const count = getProductsByUniverse(uId).length;
+              const coord = getUniverseCoords(uId);
 
               return (
                 <div
                   key={uId}
-                  onClick={() => handleSelectUniverse(uId)}
+                  onClick={() => {
+                    if (dragDistanceRef.current > 8) return;
+                    handleSelectUniverse(uId);
+                  }}
                   style={{
-                    left: `${500 + u.coord.x}px`,
-                    top: `${375 + u.coord.y}px`,
+                    left: `${500 + coord.x}px`,
+                    top: `${375 + coord.y}px`,
                   }}
                   className={`absolute -translate-x-1/2 -translate-y-1/2 transition-all duration-500 ${
                     isDimmed
@@ -697,33 +810,41 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
 
                     {/* Universe Node Card */}
                     <div
-                      className={`relative flex items-center gap-3 px-3.5 py-2.5 rounded-2xl backdrop-blur-md border transition-all duration-300 shadow-xl w-[210px] min-w-[210px] ${
+                      className={`relative flex items-center gap-2 sm:gap-3 px-2 sm:px-3.5 py-1.5 sm:py-2.5 rounded-2xl backdrop-blur-md border transition-all duration-300 shadow-xl ${
+                        isMobile
+                          ? isSelected
+                            ? 'w-[172px] min-w-[172px]'
+                            : 'w-[152px] min-w-[152px]'
+                          : 'w-[210px] min-w-[210px]'
+                      } ${
                         isSelected
                           ? 'bg-zinc-900 border-[#00DF00] shadow-[0_0_30px_rgba(0,223,0,0.5)]'
                           : 'bg-zinc-950/95 border-zinc-800 group-hover:border-[#00DF00]/70'
                       }`}
                     >
                       <div
-                        className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-300 ${
+                        className={`rounded-xl flex items-center justify-center shrink-0 transition-transform duration-300 ${
+                          isMobile ? 'w-7 h-7' : 'w-10 h-10'
+                        } ${
                           isSelected
                             ? 'bg-[#00DF00] text-black shadow-[0_0_15px_rgba(0,223,0,0.6)]'
                             : 'bg-[#00DF00]/15 text-[#00DF00] border border-[#00DF00]/40 group-hover:scale-110'
                         }`}
                       >
-                        {renderUniverseIcon(u.iconName, 'w-5 h-5')}
+                        {renderUniverseIcon(u.iconName, isMobile ? 'w-3.5 h-3.5' : 'w-5 h-5')}
                       </div>
 
                       <div className="text-left flex-1 min-w-0">
-                        <h3 className="text-xs sm:text-sm font-extrabold text-white font-heading tracking-wide leading-tight line-clamp-2">
+                        <h3 className="text-[11px] sm:text-sm font-extrabold text-white font-heading tracking-wide leading-tight line-clamp-2">
                           {u.name}
                         </h3>
-                        <p className="text-[10px] text-zinc-400 font-mono mt-0.5">
+                        <p className="text-[9px] sm:text-[10px] text-zinc-400 font-mono mt-0.5">
                           {count} {count === 1 ? 'Solução' : 'Soluções'}
                         </p>
                       </div>
 
                       <ChevronRight
-                        className={`w-4 h-4 text-[#00DF00] shrink-0 transition-transform duration-300 ${
+                        className={`w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#00DF00] shrink-0 transition-transform duration-300 ${
                           isSelected ? 'rotate-90' : 'group-hover:translate-x-0.5'
                         }`}
                       />
@@ -733,12 +854,15 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
               );
             })}
 
-            {/* ADAPTIVE NON-OVERLAPPING CHILD SOLUTION NODES (Bilateral Wings) */}
+            {/* ADAPTIVE NON-OVERLAPPING CHILD SOLUTION NODES */}
             {selectedUniverseId && activeUniverse && (
               <div className="animate-fadeIn">
                 {activeProducts.map(({ product, context }, idx) => {
                   const total = activeProducts.length;
-                  const pos = getSolutionBilateralPosition(idx, total, activeUniverse.coord);
+                  const center = getUniverseCoords(activeUniverse.id);
+                  const pos = isMobile
+                    ? getSolutionMobileOrbitalPosition(idx, total, center)
+                    : getSolutionBilateralPosition(idx, total, center);
                   const isSolSelected = selectedProductId === product.id;
                   const isHovered = hoveredProductId === product.id;
                   const isOtherHovered = Boolean(hoveredProductId && hoveredProductId !== product.id);
@@ -759,6 +883,7 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
                       onBlur={() => setHoveredProductId(null)}
                       onClick={(e) => {
                         e.stopPropagation();
+                        if (dragDistanceRef.current > 8) return;
                         handleSelectProduct(product.id);
                       }}
                       onKeyDown={(e) => {
@@ -770,7 +895,9 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
                       className="absolute -translate-x-1/2 -translate-y-1/2 z-30 cursor-pointer group outline-none"
                     >
                       <div
-                        className={`relative flex items-center justify-between gap-2 px-3 py-1.5 rounded-xl border backdrop-blur-md transition-all duration-300 shadow-md w-[264px] min-w-[264px] ${
+                        className={`relative flex items-center justify-between gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl border backdrop-blur-md transition-all duration-300 shadow-md ${
+                          isMobile ? 'w-[156px] min-w-[156px]' : 'w-[264px] min-w-[264px]'
+                        } ${
                           isSolSelected
                             ? 'bg-[#00DF00] text-black border-[#00DF00] shadow-[0_0_22px_rgba(0,223,0,0.65)] scale-105'
                             : isHovered
@@ -780,7 +907,7 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
                             : 'bg-zinc-950/95 border-zinc-700/80 text-zinc-200 hover:border-[#00DF00] hover:text-white hover:scale-102 hover:shadow-[0_0_12px_rgba(0,223,0,0.25)]'
                         }`}
                       >
-                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 min-w-0 flex-1">
                           <div
                             className={`w-1.5 h-1.5 rounded-full shrink-0 transition-all duration-300 ${
                               isSolSelected
@@ -792,7 +919,7 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
                           />
                           <div className="min-w-0 flex-1 text-left">
                             <span
-                              className={`text-xs font-bold tracking-tight block truncate font-heading transition-colors ${
+                              className={`text-[10.5px] sm:text-xs font-bold tracking-tight block truncate font-heading transition-colors ${
                                 isSolSelected
                                   ? 'text-black'
                                   : isHovered
@@ -803,7 +930,7 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
                               {product.name}
                             </span>
                             <span
-                              className={`text-[10px] block truncate font-medium tracking-tight transition-colors ${
+                              className={`text-[9px] sm:text-[10px] block truncate font-medium tracking-tight transition-colors ${
                                 isSolSelected
                                   ? 'text-black/85 font-semibold'
                                   : isHovered
@@ -835,10 +962,81 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
           </div>
         </div>
 
+        {/* Mobile Navigation & Off-Screen Guidance HUD */}
+        {isMobile && selectedUniverseId && activeUniverse && (Math.abs(panOffset.x) > 20 || Math.abs(panOffset.y) > 20) && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setPanOffset({ x: 0, y: 0 });
+            }}
+            className="absolute top-2.5 left-1/2 -translate-x-1/2 z-50 px-3 py-1 rounded-full bg-zinc-950/95 border border-[#00DF00] text-white text-[10px] font-mono uppercase tracking-wider flex items-center gap-1.5 shadow-[0_0_15px_rgba(0,223,0,0.5)] backdrop-blur-md active:scale-95 transition-all"
+            title="Recentralizar universo"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-[#00DF00]" />
+            <span>Centralizar {activeUniverse.name}</span>
+          </button>
+        )}
+
+        {/* Discreet Mobile Overview Hint */}
+        {isMobile && !selectedUniverseId && (
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-40 pointer-events-none px-3 py-1 rounded-full bg-zinc-950/80 border border-zinc-800/80 text-zinc-400 text-[10px] font-mono tracking-wide flex items-center gap-1.5 backdrop-blur-sm">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#00DF00] animate-pulse" />
+            <span>Toque em um setor para explorar</span>
+          </div>
+        )}
       </main>
 
+      {/* Mobile Bottom Quick-Select Dock (Horizontal Scroll) */}
+      {isMobile && selectedUniverseId && activeUniverse && (
+        <div className="relative z-30 w-full bg-black/95 border-t border-zinc-900 px-3 py-1.5">
+          <div className="flex items-center justify-between text-[10px] text-zinc-400 font-mono mb-1 px-0.5">
+            <span className="text-[#00DF00] flex items-center gap-1 font-semibold">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#00DF00] animate-pulse" />
+              SOLUÇÕES ({activeProducts.length})
+            </span>
+            <span className="text-zinc-500">Toque para focar</span>
+          </div>
+          <div className="flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden py-0.5">
+            {activeProducts.map(({ product }, idx) => {
+              const center = getUniverseCoords(activeUniverse.id);
+              const pos = getSolutionMobileOrbitalPosition(idx, activeProducts.length, center);
+              const isCurrent = selectedProductId === product.id;
+
+              return (
+                <button
+                  key={`dock-${product.id}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const total = activeProducts.length;
+                    const maxRows = Math.ceil(total / 2);
+                    const maxDown = total <= 4 ? 40 : Math.max(120, maxRows * 76 - 180);
+                    const targetPanY = Math.max(-maxDown, Math.min(50, -(pos.y - center.y - 70)));
+                    setPanOffset({ x: 0, y: targetPanY });
+                    handleSelectProduct(product.id);
+                  }}
+                  className={`shrink-0 px-2.5 py-1 rounded-lg text-[11px] font-medium border transition-all flex items-center gap-1.5 ${
+                    isCurrent
+                      ? 'bg-[#00DF00] text-black border-[#00DF00] font-bold shadow-[0_0_10px_rgba(0,223,0,0.5)]'
+                      : 'bg-zinc-900/90 text-zinc-300 border-zinc-800 hover:border-[#00DF00]/60 active:scale-95'
+                  }`}
+                >
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                      isCurrent ? 'bg-black' : 'bg-[#00DF00]'
+                    }`}
+                  />
+                  <span className="truncate max-w-[130px] font-heading">{product.name}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Bottom Informational Bar / Selected Solution Context */}
-      <footer className="relative z-30 w-full bg-black/90 backdrop-blur-md border-t border-zinc-900 px-4 sm:px-8 py-2.5 select-text">
+      <footer className={`relative z-30 w-full bg-black/90 backdrop-blur-md border-t border-zinc-900 px-4 sm:px-8 py-2.5 select-text ${
+        isMobile && selectedUniverseId ? 'hidden' : 'block'
+      }`}>
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-2.5 text-xs">
           
           {/* Status and Active Context Summary */}

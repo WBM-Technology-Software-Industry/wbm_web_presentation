@@ -78,7 +78,7 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col font-sans selection:bg-[#00DF00] selection:text-black">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-black text-white flex flex-col font-sans selection:bg-[#00DF00] selection:text-black">
       {/* Top Navigation Bar */}
       <Header
         currentMode={currentMode}
