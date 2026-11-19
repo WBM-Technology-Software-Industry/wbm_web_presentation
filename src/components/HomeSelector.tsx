@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { SlidersHorizontal, ScrollText, ArrowRight, ShieldCheck, Cpu, Sparkles } from 'lucide-react';
+import { SlidersHorizontal, ScrollText, Compass, ArrowRight, ShieldCheck, Cpu, Sparkles } from 'lucide-react';
 import { ConnectedNetworkCanvas } from './ui/ConnectedNetworkCanvas';
 
 interface HomeSelectorProps {
-  onSelectMode: (mode: 'slides' | 'vertical') => void;
+  onSelectMode: (mode: 'slides' | 'vertical' | 'portfolio') => void;
 }
 
 export const HomeSelector: React.FC<HomeSelectorProps> = ({ onSelectMode }) => {
@@ -70,8 +70,8 @@ export const HomeSelector: React.FC<HomeSelectorProps> = ({ onSelectMode }) => {
           </p>
         </div>
 
-        {/* Two Choice Cards - Stagger 4 & 5 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 pt-2 max-w-3xl mx-auto text-left">
+        {/* Three Choice Cards - Stagger 4, 5 & 6 */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 pt-2 max-w-5xl mx-auto text-left">
           
           {/* Option A: Slide Presentation */}
           <button
@@ -90,7 +90,7 @@ export const HomeSelector: React.FC<HomeSelectorProps> = ({ onSelectMode }) => {
               </div>
 
               <h2 className="text-lg sm:text-xl font-extrabold text-white font-heading group-hover:text-[#00DF00] transition-colors">
-                Ver apresentação em slides
+                Apresentação em slides
               </h2>
 
               <p className="text-xs sm:text-sm text-zinc-400 mt-2 leading-relaxed font-normal">
@@ -121,7 +121,7 @@ export const HomeSelector: React.FC<HomeSelectorProps> = ({ onSelectMode }) => {
               </div>
 
               <h2 className="text-lg sm:text-xl font-extrabold text-white font-heading group-hover:text-[#00DF00] transition-colors">
-                Explorar apresentação vertical
+                Apresentação vertical
               </h2>
 
               <p className="text-xs sm:text-sm text-zinc-400 mt-2 leading-relaxed font-normal">
@@ -131,6 +131,37 @@ export const HomeSelector: React.FC<HomeSelectorProps> = ({ onSelectMode }) => {
 
             <div className="flex items-center gap-2 text-xs font-bold text-zinc-300 group-hover:text-[#00DF00] mt-6 pt-4 border-t border-zinc-800/80 transition-colors">
               <span>Explorar Página Única</span>
+              <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1.5" />
+            </div>
+          </button>
+
+          {/* Option C: Interactive Cinematic Portfolio */}
+          <button
+            onClick={() => onSelectMode('portfolio')}
+            className={`group relative flex flex-col justify-between p-6 sm:p-7 rounded-2xl sm:rounded-3xl bg-gradient-to-b from-zinc-900/90 via-zinc-950/95 to-[#030603] border-2 border-[#00DF00]/30 hover:border-[#00DF00] transition-all duration-300 shadow-lg hover:shadow-[0_0_35px_rgba(0,223,0,0.35)] hover:-translate-y-1.5 hover:scale-[1.01] active:scale-98 ${
+              mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+            } transition-all duration-600 delay-1000`}
+          >
+            <div>
+              <div className="w-12 h-12 rounded-2xl bg-[#00DF00]/10 border border-[#00DF00]/40 group-hover:border-[#00DF00] group-hover:bg-[#00DF00]/25 flex items-center justify-center text-[#00DF00] mb-4 group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(0,223,0,0.4)] transition-all duration-300">
+                <Compass className="w-6 h-6 stroke-[2.2]" />
+              </div>
+
+              <div className="text-[11px] font-mono text-[#00DF00] uppercase tracking-wider mb-1">
+                Modo C · Cinematográfico
+              </div>
+
+              <h2 className="text-lg sm:text-xl font-extrabold text-white font-heading group-hover:text-[#00DF00] transition-colors">
+                Portfólio interativo
+              </h2>
+
+              <p className="text-xs sm:text-sm text-zinc-400 mt-2 leading-relaxed font-normal">
+                Exploração espacial entre 6 setores de mercado e 15 soluções: Desafio → Solução WBM → Resultado.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 text-xs font-bold text-[#00DF00] mt-6 pt-4 border-t border-zinc-800/80 transition-colors">
+              <span>Navegar no Portfólio</span>
               <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1.5" />
             </div>
           </button>

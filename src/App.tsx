@@ -3,13 +3,14 @@ import { Header } from './components/Header';
 import { SlideMode } from './components/SlideMode';
 import { VerticalMode } from './components/VerticalMode';
 import { HomeSelector } from './components/HomeSelector';
+import { PortfolioMode } from './components/portfolio/PortfolioMode';
 
 export function App() {
-  const [currentMode, setCurrentMode] = useState<'home' | 'slides' | 'vertical'>(() => {
-    // Check URL search params for direct mode links e.g. ?mode=slides or ?mode=vertical
+  const [currentMode, setCurrentMode] = useState<'home' | 'slides' | 'vertical' | 'portfolio'>(() => {
+    // Check URL search params for direct mode links e.g. ?mode=slides, ?mode=vertical or ?mode=portfolio
     const params = new URLSearchParams(window.location.search);
     const modeParam = params.get('mode');
-    if (modeParam === 'slides' || modeParam === 'vertical') {
+    if (modeParam === 'slides' || modeParam === 'vertical' || modeParam === 'portfolio') {
       return modeParam;
     }
     return 'home';
@@ -23,7 +24,7 @@ export function App() {
     const handlePopState = () => {
       const params = new URLSearchParams(window.location.search);
       const modeParam = params.get('mode');
-      if (modeParam === 'slides' || modeParam === 'vertical') {
+      if (modeParam === 'slides' || modeParam === 'vertical' || modeParam === 'portfolio') {
         setCurrentMode(modeParam);
       } else {
         setCurrentMode('home');
@@ -58,7 +59,7 @@ export function App() {
     }
   };
 
-  const handleModeChange = (mode: 'slides' | 'vertical') => {
+  const handleModeChange = (mode: 'slides' | 'vertical' | 'portfolio') => {
     setCurrentMode(mode);
     setSlideSessionKey((prev) => prev + 1);
     const url = new URL(window.location.href);
@@ -103,6 +104,13 @@ export function App() {
 
         {currentMode === 'vertical' && (
           <VerticalMode key={`vertical-session-${slideSessionKey}`} />
+        )}
+
+        {currentMode === 'portfolio' && (
+          <PortfolioMode
+            key={`portfolio-session-${slideSessionKey}`}
+            onReturnHome={handleReturnHome}
+          />
         )}
       </div>
     </div>

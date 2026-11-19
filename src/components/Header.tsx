@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { SlidersHorizontal, ScrollText, Maximize2, Minimize2, Share2, MessageSquare, Check, ArrowLeft } from 'lucide-react';
+import { SlidersHorizontal, ScrollText, Compass, Maximize2, Minimize2, Share2, MessageSquare, Check, ArrowLeft } from 'lucide-react';
 import { contactInfo } from '../data/presentationData';
 
 interface HeaderProps {
-  currentMode: 'home' | 'slides' | 'vertical';
-  onToggleMode: (mode: 'slides' | 'vertical') => void;
+  currentMode: 'home' | 'slides' | 'vertical' | 'portfolio';
+  onToggleMode: (mode: 'slides' | 'vertical' | 'portfolio') => void;
   onReturnHome: () => void;
   isFullscreen: boolean;
   onToggleFullscreen: () => void;
@@ -97,6 +97,18 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <ScrollText className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <span>Vertical</span>
+          </button>
+
+          <button
+            onClick={() => onToggleMode('portfolio')}
+            className={`flex items-center gap-1.5 px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all duration-300 ${
+              currentMode === 'portfolio'
+                ? 'bg-[#00DF00] text-black shadow-[0_0_12px_rgba(0,223,0,0.5)]'
+                : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            <Compass className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span>Portfólio</span>
           </button>
         </div>
 

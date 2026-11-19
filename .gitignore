@@ -38,6 +38,7 @@ Thumbs.db
 *.pptx
 extracted_pptx/
 slide_images/
+visual_audit_evidence/
 *.py
 *.ps1
 node_modules/
