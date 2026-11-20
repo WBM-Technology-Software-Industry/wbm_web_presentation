@@ -4,6 +4,7 @@ import { SlideMode } from './components/SlideMode';
 import { VerticalMode } from './components/VerticalMode';
 import { HomeSelector } from './components/HomeSelector';
 import { PortfolioMode } from './components/portfolio/PortfolioMode';
+import { ImmersiveEntryExperience } from './components/ImmersiveEntryExperience';
 
 export function App() {
   const [currentMode, setCurrentMode] = useState<'home' | 'slides' | 'vertical' | 'portfolio'>(() => {
@@ -19,6 +20,13 @@ export function App() {
   const [slideSessionKey, setSlideSessionKey] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
+  // Unique presentation entry counter to restart immersive entry experience on each new entry
+  const [presentationEntryId, setPresentationEntryId] = useState<number>(() => {
+    const params = new URLSearchParams(window.location.search);
+    const m = params.get('mode');
+    return (m === 'slides' || m === 'portfolio') ? 1 : 0;
+  });
+
   // Sync browser back/forward buttons (History API)
   useEffect(() => {
     const handlePopState = () => {
@@ -26,6 +34,9 @@ export function App() {
       const modeParam = params.get('mode');
       if (modeParam === 'slides' || modeParam === 'vertical' || modeParam === 'portfolio') {
         setCurrentMode(modeParam);
+        if (modeParam === 'slides' || modeParam === 'portfolio') {
+          setPresentationEntryId((prev) => prev + 1);
+        }
       } else {
         setCurrentMode('home');
         setSlideSessionKey((prev) => prev + 1);
@@ -62,6 +73,9 @@ export function App() {
   const handleModeChange = (mode: 'slides' | 'vertical' | 'portfolio') => {
     setCurrentMode(mode);
     setSlideSessionKey((prev) => prev + 1);
+    if (mode === 'slides' || mode === 'portfolio') {
+      setPresentationEntryId((prev) => prev + 1);
+    }
     const url = new URL(window.location.href);
     url.searchParams.set('mode', mode);
     window.history.pushState({ mode }, '', url.toString());
@@ -113,6 +127,12 @@ export function App() {
           />
         )}
       </div>
+
+      {/* Immersive Entry Experience: Orientation + Fullscreen for Smartphones */}
+      <ImmersiveEntryExperience
+        currentMode={currentMode}
+        entryId={presentationEntryId}
+      />
     </div>
   );
 }

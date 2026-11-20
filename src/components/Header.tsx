@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { SlidersHorizontal, ScrollText, Compass, Maximize2, Minimize2, Share2, MessageSquare, Check, ArrowLeft } from 'lucide-react';
 import { contactInfo } from '../data/presentationData';
+import { getIsFullscreenSupported } from './ImmersiveEntryExperience';
 
 interface HeaderProps {
   currentMode: 'home' | 'slides' | 'vertical' | 'portfolio';
@@ -44,7 +45,7 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full max-w-full bg-black/90 backdrop-blur-md border-b border-zinc-800/80 px-2.5 sm:px-6 py-2 sm:py-3 select-none overflow-x-hidden">
+    <header className="sticky top-0 z-50 w-full max-w-full bg-black/90 backdrop-blur-md border-b border-zinc-800/80 px-2.5 sm:px-6 py-1.5 sm:py-2 select-none overflow-x-hidden">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-4">
         
         {/* Left: Home Return Button & Brand Logo */}
@@ -68,7 +69,7 @@ export const Header: React.FC<HeaderProps> = ({
             <img
               src="/assets/wbm-logo-clean.png"
               alt="WBM Technology"
-              className="h-6 sm:h-9 w-auto object-contain drop-shadow-[0_0_8px_rgba(0,223,0,0.4)] group-hover:drop-shadow-[0_0_12px_rgba(0,223,0,0.7)] transition-all"
+              className="h-6 sm:h-7.5 w-auto object-contain drop-shadow-[0_0_8px_rgba(0,223,0,0.4)] group-hover:drop-shadow-[0_0_12px_rgba(0,223,0,0.7)] transition-all"
             />
           </button>
         </div>
@@ -134,14 +135,27 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </button>
 
-          {/* Fullscreen Toggle (mainly for slide mode) */}
-          <button
-            onClick={onToggleFullscreen}
-            className="p-2 sm:p-2 rounded-lg sm:rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:border-[#00DF00]/60 transition-all active:scale-95 hidden sm:flex"
-            title={isFullscreen ? 'Sair da tela cheia' : 'Modo tela cheia'}
-          >
-            {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-          </button>
+          {/* Fullscreen Toggle */}
+          {getIsFullscreenSupported() && (
+            <button
+              onClick={onToggleFullscreen}
+              className="p-2 sm:px-2.5 sm:py-1.5 rounded-lg sm:rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:border-[#00DF00]/60 transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer"
+              title={isFullscreen ? 'Sair da tela cheia' : 'Modo tela cheia'}
+              aria-label={isFullscreen ? 'Sair da tela cheia' : 'Modo tela cheia'}
+            >
+              {isFullscreen ? (
+                <>
+                  <Minimize2 className="w-4 h-4 text-[#00DF00]" />
+                  <span className="hidden md:inline text-[11px] font-mono text-[#00DF00]">Sair</span>
+                </>
+              ) : (
+                <>
+                  <Maximize2 className="w-4 h-4" />
+                  <span className="hidden md:inline text-[11px] font-mono">Tela cheia</span>
+                </>
+              )}
+            </button>
+          )}
 
           {/* Direct WhatsApp Call-to-action */}
           <a

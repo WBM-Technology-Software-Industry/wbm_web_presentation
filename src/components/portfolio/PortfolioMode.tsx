@@ -22,6 +22,8 @@ import {
 } from 'lucide-react';
 import { NetworkMeshBg } from '../ui/NetworkMeshBg';
 import { SolutionDetailPanel } from './SolutionDetailPanel';
+import { MobileGuidedExperience } from './MobileGuidedExperience';
+import { MobileSectorOverview } from './MobileSectorOverview';
 
 interface PortfolioModeProps {
   onReturnHome: () => void;
@@ -48,6 +50,22 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
     const params = new URLSearchParams(window.location.search);
     const prod = params.get('product');
     return prod ? (prod as ProductId) : null;
+  });
+
+  // Active product featured in mobile Industria guided experience
+  const [guidedProductId, setGuidedProductId] = useState<ProductId | null>(() => {
+    if (typeof window === 'undefined') return null;
+    const params = new URLSearchParams(window.location.search);
+    const prod = params.get('product');
+    return prod ? (prod as ProductId) : null;
+  });
+
+  // View mode for mobile Industria: 'guided' (default) vs 'orbital' (free map)
+  const [mobileViewMode, setMobileViewMode] = useState<'guided' | 'orbital'>(() => {
+    if (typeof window === 'undefined') return 'guided';
+    const params = new URLSearchParams(window.location.search);
+    const v = params.get('view');
+    return v === 'orbital' ? 'orbital' : 'guided';
   });
 
   // Hover and focus state for coordinated interactive luminous feedback (supports ?hover= for testing/deep-linking)
@@ -156,6 +174,7 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
   const handleSelectProduct = useCallback(
     (productId: ProductId) => {
       setSelectedProductId(productId);
+      setGuidedProductId(productId);
       setHoveredProductId(null);
       if (onSelectSolutionDetail && selectedUniverseId) {
         onSelectSolutionDetail(productId, selectedUniverseId);
@@ -183,12 +202,32 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
     }
   }, [selectedUniverseId]);
 
+  // Handlers for switching between Guided Experience and Free Orbital Map in mobile Industria
+  const handleSwitchToOrbital = useCallback(() => {
+    setMobileViewMode('orbital');
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.set('view', 'orbital');
+      window.history.pushState({ view: 'orbital', sector: selectedUniverseId, product: selectedProductId }, '', url.toString());
+    }
+  }, [selectedUniverseId, selectedProductId]);
+
+  const handleSwitchToGuided = useCallback(() => {
+    setMobileViewMode('guided');
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.set('view', 'guided');
+      window.history.pushState({ view: 'guided', sector: selectedUniverseId, product: selectedProductId }, '', url.toString());
+    }
+  }, [selectedUniverseId, selectedProductId]);
+
   // Sync with browser back/forward buttons (PopState)
   useEffect(() => {
     const handlePopState = () => {
       const params = new URLSearchParams(window.location.search);
       const sector = params.get('sector');
       const prod = params.get('product');
+      const v = params.get('view');
       if (sector && sector in UNIVERSES) {
         setSelectedUniverseId(sector as UniverseId);
       } else {
@@ -196,8 +235,12 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
       }
       if (prod) {
         setSelectedProductId(prod as ProductId);
+        setGuidedProductId(prod as ProductId);
       } else {
         setSelectedProductId(null);
+      }
+      if (v === 'orbital' || v === 'guided') {
+        setMobileViewMode(v);
       }
     };
     window.addEventListener('popstate', handlePopState);
@@ -692,13 +735,21 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
     };
   }, [baseCameraScale, applyPan, panOffset.x, panOffset.y]);
 
+  // Flag indicating if the new mobile guided experience prototype is active for Industria
+  const isIndustriaGuided =
+    isMobile &&
+    selectedUniverseId === 'industria' &&
+    mobileViewMode === 'guided';
+
   return (
     <div className="relative w-full min-h-[calc(100vh-65px)] bg-black text-white flex flex-col justify-between overflow-hidden select-text">
       {/* Background Cyber Mesh */}
       <NetworkMeshBg />
 
-      {/* Top Breadcrumb & Controls Bar */}
-      <header className="relative z-30 w-full max-w-full bg-black/85 backdrop-blur-md border-b border-zinc-900 px-3 sm:px-8 py-2 sm:py-2.5 overflow-hidden">
+      {/* Top Breadcrumb & Controls Bar (Hidden on Mobile Overview since MobileSectorOverview provides its own rich header) */}
+      <header className={`relative z-30 w-full max-w-full bg-black/85 backdrop-blur-md border-b border-zinc-900 px-3 sm:px-8 py-2 sm:py-2.5 overflow-hidden ${
+        isMobile && !selectedUniverseId ? 'hidden' : 'block'
+      }`}>
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-3 min-w-0">
           
           {/* Breadcrumb Navigation */}
@@ -762,8 +813,31 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
         </div>
       </header>
 
-      {/* Main Interactive Stage with Touch and Mouse Panning */}
-      <main
+      {/* Mobile Sector Overview (6 Setores) or Mobile Guided Experience (Indústria) or Spatial Orbital Stage */}
+      {isMobile && !selectedUniverseId ? (
+        <MobileSectorOverview onSelectUniverse={handleSelectUniverse} />
+      ) : isIndustriaGuided ? (
+        <MobileGuidedExperience
+          products={activeProducts}
+          activeProductId={guidedProductId || activeProducts[0]?.product.id || null}
+          onSelectProduct={(prodId) => {
+            setGuidedProductId(prodId);
+            if (typeof window !== 'undefined') {
+              const url = new URL(window.location.href);
+              url.searchParams.set('product', prodId);
+              window.history.replaceState({ sector: selectedUniverseId, product: prodId }, '', url.toString());
+            }
+          }}
+          onOpenProductDetail={(prodId) => {
+            handleSelectProduct(prodId);
+          }}
+          onSwitchToOrbitalMap={handleSwitchToOrbital}
+          onBackToOverview={handleBackToOverview}
+        />
+      ) : (
+        <>
+          {/* Main Interactive Stage with Touch and Mouse Panning */}
+          <main
         ref={containerRef}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -1203,6 +1277,22 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
           </div>
         </div>
 
+        {/* Switch back to Guided Experience when inside mobile Industria orbital map */}
+        {isMobile && selectedUniverseId === 'industria' && mobileViewMode === 'orbital' && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleSwitchToGuided();
+            }}
+            className="absolute top-2.5 left-3 z-50 px-3 py-1 rounded-full bg-zinc-950/95 border border-[#00DF00]/60 text-white text-[10px] font-mono uppercase tracking-wider flex items-center gap-1.5 shadow-[0_0_15px_rgba(0,223,0,0.3)] backdrop-blur-md active:scale-95 transition-all"
+            title="Voltar à exploração guiada de Indústria"
+            aria-label="Voltar à exploração guiada"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 text-[#00DF00]" />
+            <span>Exploração guiada</span>
+          </button>
+        )}
+
         {/* Mobile Navigation & Off-Screen Guidance HUD */}
         {isMobile && selectedUniverseId && activeUniverse && isViewModified && (
           <button
@@ -1327,6 +1417,8 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
           </div>
         </div>
       )}
+    </>
+  )}
 
       {/* Bottom Informational Bar / Selected Solution Context */}
       <footer className={`relative z-30 w-full bg-black/90 backdrop-blur-md border-t border-zinc-900 px-4 sm:px-8 py-2.5 select-text ${

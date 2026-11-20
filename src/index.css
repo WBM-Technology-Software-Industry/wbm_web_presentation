@@ -42,6 +42,57 @@
   box-shadow: 0 0 24px rgba(0, 223, 0, 0.22);
 }
 
+@keyframes orientationRotatePhone {
+  0%, 15% {
+    transform: rotate(0deg);
+  }
+  42%, 76% {
+    transform: rotate(90deg);
+  }
+  92%, 100% {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes fullscreenExpandWindow {
+  0%, 18% {
+    transform: scale(0.72);
+  }
+  48%, 80% {
+    transform: scale(1.0);
+  }
+  92%, 100% {
+    transform: scale(0.72);
+  }
+}
+
+@keyframes browserBarFade {
+  0%, 18% {
+    opacity: 0.95;
+  }
+  45%, 82% {
+    opacity: 0;
+  }
+  92%, 100% {
+    opacity: 0.95;
+  }
+}
+
+@keyframes cornerArrowPulse {
+  0%, 20% {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+  48%, 78% {
+    opacity: 0.25;
+    transform: scale(1.15);
+  }
+  92%, 100% {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+}
+
 /* Respect reduced motion */
 @media (prefers-reduced-motion: reduce) {
   * {
