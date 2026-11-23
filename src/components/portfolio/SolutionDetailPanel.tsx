@@ -169,26 +169,26 @@ export const SolutionDetailPanel: React.FC<SolutionDetailPanelProps> = ({
     >
       <div
         ref={panelRef}
-        className={`w-full max-w-xl h-full border-l flex flex-col shadow-2xl overflow-hidden animate-slideLeft motion-reduce:animate-none select-text ${
+        className={`w-full max-w-xl h-full max-h-[100dvh] border-l flex flex-col shadow-2xl overflow-hidden animate-slideLeft motion-reduce:animate-none select-text ${
           isDark ? 'bg-[#0B1115] border-zinc-800 text-white' : 'bg-[#F4F8F6] border-[#B8D1C3] text-[#172C22]'
         }`}
       >
         {/* A. IDENTIFICAÇÃO (HEADER COMERCIAL) */}
-        <header className={`relative p-5 sm:p-6 border-b ${
+        <header className={`relative p-4 sm:p-6 border-b shrink-0 ${
           isDark ? 'bg-[#131F24] border-zinc-800/80' : 'bg-white border-[#B8D1C3] shadow-sm'
         }`}>
-          <div className="flex items-center justify-between gap-3 mb-2.5">
+          <div className="flex items-center justify-between gap-3 mb-2">
             {/* Sector Badge */}
-            <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-medium ${
+            <div className={`inline-flex items-center gap-2 px-2.5 sm:px-3 py-1 rounded-full border text-xs font-medium ${
               isDark ? 'bg-zinc-900 border-zinc-800 text-zinc-300' : 'bg-[#D7EBDD] border-[#B8D1C3] text-[#172C22]'
             }`}>
               <span className={isDark ? 'text-[#00DF00]' : 'text-[#087C3B]'}>{renderUniverseIcon(universe.iconName)}</span>
-              <span>{universe.name}</span>
+              <span className="truncate max-w-[150px] sm:max-w-none">{universe.name}</span>
             </div>
 
             {/* Category Badge & Close Button */}
             <div className="flex items-center gap-2">
-              <span className={`text-[11px] font-mono px-2 py-0.5 rounded border ${
+              <span className={`text-[10.5px] sm:text-[11px] font-mono px-2 py-0.5 rounded border ${
                 isDark ? 'border-zinc-800/80 text-zinc-400 bg-zinc-900/40' : 'border-[#B8D1C3] text-[#4A6B5B] bg-[#D7EBDD]'
               }`}>
                 {product.category}
@@ -208,12 +208,12 @@ export const SolutionDetailPanel: React.FC<SolutionDetailPanelProps> = ({
           </div>
 
           {/* Solution Name & Commercial Headline */}
-          <h2 className={`text-2xl sm:text-3xl font-black tracking-tight font-heading ${
+          <h2 className={`text-xl sm:text-3xl font-black tracking-tight font-heading leading-tight ${
             isDark ? 'text-white' : 'text-[#172C22]'
           }`}>
             {product.name}
           </h2>
-          <p className={`mt-1 text-sm font-semibold leading-relaxed ${
+          <p className={`mt-1 text-xs sm:text-sm font-semibold leading-relaxed ${
             isDark ? 'text-[#00DF00]' : 'text-[#087C3B]'
           }`}>
             {commercialHeadline}
@@ -545,7 +545,7 @@ export const SolutionDetailPanel: React.FC<SolutionDetailPanelProps> = ({
         </div>
 
         {/* H. CHAMADA PARA AÇÃO (STICKY FOOTER COMERCIAL) */}
-        <footer className={`sticky bottom-0 z-20 p-4 sm:p-5 border-t backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-3 ${
+        <footer className={`sticky bottom-0 z-20 p-3.5 sm:p-5 pb-[max(0.875rem,env(safe-area-inset-bottom))] border-t backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-3 shrink-0 ${
           isDark ? 'border-zinc-900 bg-zinc-950/95' : 'border-[#B8D1C3] bg-white/95'
         }`}>
           <button

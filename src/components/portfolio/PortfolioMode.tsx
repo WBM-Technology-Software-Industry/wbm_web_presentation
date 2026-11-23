@@ -289,7 +289,7 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
     }
   };
 
-  const isMobile = viewportSize.width < 768;
+  const isMobile = viewportSize.width < 768 || (viewportSize.width < 1024 && viewportSize.height < 520);
 
   // Mobile Overview Coordinates for the 6 Universes (Vertical Ellipse around IoT nucleus at 0, 0)
   const MOBILE_OVERVIEW_COORDS: Record<UniverseId, { x: number; y: number }> = {
@@ -737,10 +737,10 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
     };
   }, [baseCameraScale, applyPan, panOffset.x, panOffset.y]);
 
-  // Flag indicating if the new mobile guided experience prototype is active for Industria
-  const isIndustriaGuided =
+  // Flag indicating if the mobile guided experience is active for any selected sector
+  const isMobileGuided =
     isMobile &&
-    selectedUniverseId === 'industria' &&
+    selectedUniverseId !== null &&
     mobileViewMode === 'guided';
 
   return (
@@ -748,9 +748,9 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
       {/* Background Cyber Mesh */}
       <NetworkMeshBg />
 
-      {/* Top Breadcrumb & Controls Bar (Hidden on Mobile Overview since MobileSectorOverview provides its own rich header) */}
+      {/* Top Breadcrumb & Controls Bar (Hidden on Mobile when in Overview or in Guided Experience) */}
       <header className={`relative z-30 w-full max-w-full bg-[var(--wbm-bg)]/90 backdrop-blur-md border-b border-[var(--wbm-border)] px-3 sm:px-8 py-2 sm:py-2.5 overflow-hidden transition-colors duration-200 ${
-        isMobile && !selectedUniverseId ? 'hidden' : 'block'
+        isMobile && (!selectedUniverseId || isMobileGuided) ? 'hidden' : 'block'
       }`}>
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-3 min-w-0">
           
@@ -856,11 +856,12 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
         </div>
       </header>
 
-      {/* Mobile Sector Overview (6 Setores) or Mobile Guided Experience (Indústria) or Spatial Orbital Stage */}
+      {/* Mobile Sector Overview (6 Setores) or Mobile Guided Experience (All 6 Setores) or Spatial Orbital Stage */}
       {isMobile && !selectedUniverseId ? (
         <MobileSectorOverview onSelectUniverse={handleSelectUniverse} />
-      ) : isIndustriaGuided ? (
+      ) : isMobileGuided && activeUniverse ? (
         <MobileGuidedExperience
+          universe={activeUniverse}
           products={activeProducts}
           activeProductId={guidedProductId || activeProducts[0]?.product.id || null}
           onSelectProduct={(prodId) => {
