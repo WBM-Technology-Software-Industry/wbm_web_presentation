@@ -1,14 +1,16 @@
 import React from 'react';
 import { SlideTitle } from '../ui/SlideTitle';
-import { ImpactFooter } from '../ui/ImpactFooter';
 import { slide4Content } from '../../data/presentationData';
 import { Building2, Handshake } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
 
 interface Slide4Props {
   isVerticalMode?: boolean;
 }
 
 export const Slide4Clientes: React.FC<Slide4Props> = ({ isVerticalMode = false }) => {
+  const { isDark } = useTheme();
+
   return (
     <div className={`w-full flex flex-col justify-between ${isVerticalMode ? 'py-8' : 'h-full max-h-full py-4 sm:py-6'}`}>
       <SlideTitle title={slide4Content.title} />
@@ -19,15 +21,25 @@ export const Slide4Clientes: React.FC<Slide4Props> = ({ isVerticalMode = false }
         {/* SECTION 1: CLIENTES */}
         <div>
           <div className="flex items-center gap-2.5 mb-2.5 sm:mb-3">
-            <Building2 className="w-5 h-5 sm:w-6 sm:h-6 text-[#00DF00]" />
-            <h3 className="text-base sm:text-lg lg:text-xl font-bold tracking-wider text-white uppercase font-heading flex items-center gap-2">
+            <Building2 className={`w-5 h-5 sm:w-6 sm:h-6 ${isDark ? 'text-[#00DF00]' : 'text-[#087C3B]'}`} />
+            <h3
+              className={`text-base sm:text-lg lg:text-xl font-bold tracking-wider uppercase font-heading flex items-center gap-2 ${
+                isDark ? 'text-white' : 'text-[#172C22]'
+              }`}
+            >
               <span>{slide4Content.clientsTitle}</span>
-              <div className="h-0.5 w-16 sm:w-28 bg-[#00DF00]" />
+              <div className={`h-0.5 w-16 sm:w-28 ${isDark ? 'bg-[#00DF00]' : 'bg-[#087C3B]'}`} />
             </h3>
           </div>
 
           {/* White Card with original client logos */}
-          <div className="w-full bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-[0_4px_25px_rgba(0,0,0,0.5)] border border-zinc-200 flex items-center justify-center">
+          <div
+            className={`w-full bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 border flex items-center justify-center transition-all ${
+              isDark
+                ? 'shadow-[0_4px_25px_rgba(0,0,0,0.5)] border-zinc-200'
+                : 'shadow-md border-[#B8D1C3]'
+            }`}
+          >
             <img
               src={slide4Content.clientsImage}
               alt="Clientes WBM Technology: ArcelorMittal, UFMG, Grupo Maringá, 3D Aqua, Ceva, INCT, UFRJ, UFPR, VEOLIA, COPASA, UFPE, IGUÁ, UnB, LabLAAE"
@@ -39,18 +51,28 @@ export const Slide4Clientes: React.FC<Slide4Props> = ({ isVerticalMode = false }
         {/* SECTION 2: PARCEIROS */}
         <div>
           <div className="flex items-center gap-2.5 mb-2.5 sm:mb-3">
-            <Handshake className="w-5 h-5 sm:w-6 sm:h-6 text-[#00DF00]" />
-            <h3 className="text-base sm:text-lg lg:text-xl font-bold tracking-wider text-white uppercase font-heading flex items-center gap-2">
+            <Handshake className={`w-5 h-5 sm:w-6 sm:h-6 ${isDark ? 'text-[#00DF00]' : 'text-[#087C3B]'}`} />
+            <h3
+              className={`text-base sm:text-lg lg:text-xl font-bold tracking-wider uppercase font-heading flex items-center gap-2 ${
+                isDark ? 'text-white' : 'text-[#172C22]'
+              }`}
+            >
               <span>{slide4Content.partnersTitle}</span>
-              <div className="h-0.5 w-16 sm:w-28 bg-[#00DF00]" />
+              <div className={`h-0.5 w-16 sm:w-28 ${isDark ? 'bg-[#00DF00]' : 'bg-[#087C3B]'}`} />
             </h3>
           </div>
 
-          {/* Two White Cards with Neon Green Borders */}
+          {/* Two White Cards with Green Borders */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             
             {/* Partner 1: AQUALABO */}
-            <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 border-2 border-[#00DF00] shadow-[0_0_20px_rgba(0,223,0,0.2)] flex flex-col items-center justify-center min-h-[110px] sm:min-h-[130px] hover:shadow-[0_0_28px_rgba(0,223,0,0.4)] transition-all">
+            <div
+              className={`bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 border-2 flex flex-col items-center justify-center min-h-[110px] sm:min-h-[130px] transition-all ${
+                isDark
+                  ? 'border-[#00DF00] shadow-[0_0_20px_rgba(0,223,0,0.2)] hover:shadow-[0_0_28px_rgba(0,223,0,0.4)]'
+                  : 'border-[#087C3B] shadow-md hover:shadow-xl'
+              }`}
+            >
               <img
                 src="/assets/partner-aqualabo.png"
                 alt="Aqualabo - Smart water solutions"
@@ -59,7 +81,13 @@ export const Slide4Clientes: React.FC<Slide4Props> = ({ isVerticalMode = false }
             </div>
 
             {/* Partner 2: TESTARI with Sub-Brands */}
-            <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-5 border-2 border-[#00DF00] shadow-[0_0_20px_rgba(0,223,0,0.2)] flex items-center justify-between gap-4 min-h-[110px] sm:min-h-[130px] hover:shadow-[0_0_28px_rgba(0,223,0,0.4)] transition-all">
+            <div
+              className={`bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-5 border-2 flex items-center justify-between gap-4 min-h-[110px] sm:min-h-[130px] transition-all ${
+                isDark
+                  ? 'border-[#00DF00] shadow-[0_0_20px_rgba(0,223,0,0.2)] hover:shadow-[0_0_28px_rgba(0,223,0,0.4)]'
+                  : 'border-[#087C3B] shadow-md hover:shadow-xl'
+              }`}
+            >
               {/* Main Testari Logo */}
               <div className="flex-1 flex items-center justify-center border-r border-zinc-200 pr-3 sm:pr-4">
                 <img
@@ -98,11 +126,6 @@ export const Slide4Clientes: React.FC<Slide4Props> = ({ isVerticalMode = false }
         </div>
 
       </div>
-
-      <ImpactFooter
-        topLine={slide4Content.footerTop}
-        bottomLine={slide4Content.footerBottom}
-      />
     </div>
   );
 };

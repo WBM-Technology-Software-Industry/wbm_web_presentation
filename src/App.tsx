@@ -5,8 +5,9 @@ import { VerticalMode } from './components/VerticalMode';
 import { HomeSelector } from './components/HomeSelector';
 import { PortfolioMode } from './components/portfolio/PortfolioMode';
 import { ImmersiveEntryExperience } from './components/ImmersiveEntryExperience';
+import { ThemeProvider } from './context/ThemeContext';
 
-export function App() {
+function AppContent() {
   const [currentMode, setCurrentMode] = useState<'home' | 'slides' | 'vertical' | 'portfolio'>(() => {
     // Check URL search params for direct mode links e.g. ?mode=slides, ?mode=vertical or ?mode=portfolio
     const params = new URLSearchParams(window.location.search);
@@ -92,7 +93,7 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-black text-white flex flex-col font-sans selection:bg-[#00DF00] selection:text-black">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[var(--wbm-bg)] text-[var(--wbm-text)] flex flex-col font-sans transition-colors duration-200">
       {/* Top Navigation Bar */}
       <Header
         currentMode={currentMode}
@@ -134,6 +135,14 @@ export function App() {
         entryId={presentationEntryId}
       />
     </div>
+  );
+}
+
+export function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   );
 }
 

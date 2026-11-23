@@ -1,9 +1,31 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="dark scroll-smooth">
+<html lang="pt-BR" class="light scroll-smooth" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
     <title>WBM Technology — Apresentação Institucional</title>
+
+    <!-- Theme anti-flash script: respects localStorage 'wbm_theme' with default 'light' -->
+    <script>
+      (function() {
+        try {
+          var saved = localStorage.getItem('wbm_theme');
+          var theme = (saved === 'dark' || saved === 'light') ? saved : 'light';
+          var root = document.documentElement;
+          if (theme === 'dark') {
+            root.classList.add('dark');
+            root.classList.remove('light');
+            root.setAttribute('data-theme', 'dark');
+            root.style.colorScheme = 'dark';
+          } else {
+            root.classList.remove('dark');
+            root.classList.add('light');
+            root.setAttribute('data-theme', 'light');
+            root.style.colorScheme = 'light';
+          }
+        } catch (e) {}
+      })();
+    </script>
     
     <!-- Metadados de SEO e Identidade -->
     <meta name="description" content="A WBM Technology desenvolve e integra soluções de instrumentação, automação e IoT para monitoramento, supervisão e controle de equipamentos e processos industriais." />
@@ -43,8 +65,8 @@
     <style>
       /* Base styles */
       body {
-        background-color: #000000;
-        color: #ffffff;
+        background-color: var(--wbm-bg, #E6EFEB);
+        color: var(--wbm-text, #172C22);
         font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         overflow-x: hidden;
       }
@@ -61,14 +83,17 @@
         height: 6px;
       }
       ::-webkit-scrollbar-track {
-        background: #000000;
+        background: transparent;
       }
       ::-webkit-scrollbar-thumb {
-        background: #00DF00;
+        background: #087C3B;
         border-radius: 3px;
       }
+      .dark ::-webkit-scrollbar-thumb {
+        background: #00DF00;
+      }
       ::-webkit-scrollbar-thumb:hover {
-        background: #00ff00;
+        background: #00DF00;
       }
 
       /* Neon glow text helper */
@@ -80,7 +105,7 @@
       }
     </style>
   </head>
-  <body class="bg-black text-white antialiased selection:bg-[#00DF00] selection:text-black min-h-screen">
+  <body class="bg-[var(--wbm-bg)] text-[var(--wbm-text)] antialiased selection:bg-[#00DF00] selection:text-black min-h-screen">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

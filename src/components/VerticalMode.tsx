@@ -7,10 +7,12 @@ import { Slide5Contato } from './slides/Slide5Contato';
 import { NetworkMeshBg } from './ui/NetworkMeshBg';
 import { slidesMeta, contactInfo } from '../data/presentationData';
 import { MessageSquare, ArrowUp, ChevronDown } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 
 export const VerticalMode: React.FC = () => {
   const [activeSection, setActiveSection] = useState(1);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const { isDark } = useTheme();
 
   useEffect(() => {
     // Ensure viewport starts at top on entry
@@ -51,10 +53,20 @@ export const VerticalMode: React.FC = () => {
   };
 
   return (
-    <div className="relative w-full bg-black min-h-screen text-white">
+    <div
+      className={`relative w-full min-h-screen transition-colors duration-200 ${
+        isDark ? 'bg-black text-white' : 'bg-[#E6EFEB] text-[#172C22]'
+      }`}
+    >
       
       {/* Floating Side Dot Navigation for Desktop */}
-      <nav className="fixed right-4 sm:right-6 top-1/2 -translate-y-1/2 z-40 hidden md:flex flex-col gap-3.5 bg-black/70 backdrop-blur-md p-2.5 rounded-full border border-zinc-800 shadow-xl select-none">
+      <nav
+        className={`fixed right-4 sm:right-6 top-1/2 -translate-y-1/2 z-40 hidden md:flex flex-col gap-3.5 backdrop-blur-md p-2.5 rounded-full border shadow-xl select-none transition-colors duration-200 ${
+          isDark
+            ? 'bg-black/70 border-zinc-800'
+            : 'bg-white/80 border-[#B8D1C3]'
+        }`}
+      >
         {slidesMeta.map((slide) => (
           <button
             key={slide.id}
@@ -63,7 +75,13 @@ export const VerticalMode: React.FC = () => {
             title={slide.title}
           >
             {/* Tooltip on hover */}
-            <span className="absolute right-7 bg-zinc-950 border border-zinc-700 text-white text-xs px-2.5 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-lg">
+            <span
+              className={`absolute right-7 border text-xs px-2.5 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-lg ${
+                isDark
+                  ? 'bg-zinc-950 border-zinc-700 text-white'
+                  : 'bg-white border-[#B8D1C3] text-[#172C22]'
+              }`}
+            >
               {slide.title}
             </span>
 
@@ -71,8 +89,12 @@ export const VerticalMode: React.FC = () => {
             <div
               className={`w-3 h-3 rounded-full transition-all duration-300 ${
                 activeSection === slide.id
-                  ? 'bg-[#00DF00] scale-125 shadow-[0_0_10px_rgba(0,223,0,0.8)]'
-                  : 'bg-zinc-700 hover:bg-zinc-400'
+                  ? isDark
+                    ? 'bg-[#00DF00] scale-125 shadow-[0_0_10px_rgba(0,223,0,0.8)]'
+                    : 'bg-[#087C3B] scale-125 shadow-md'
+                  : isDark
+                  ? 'bg-zinc-700 hover:bg-zinc-400'
+                  : 'bg-[#B8D1C3] hover:bg-[#087C3B]/60'
               }`}
             />
           </button>
@@ -101,7 +123,11 @@ export const VerticalMode: React.FC = () => {
         {showScrollTop && (
           <button
             onClick={scrollToTop}
-            className="p-2.5 rounded-full bg-zinc-900/90 border border-zinc-700 text-zinc-300 hover:text-white hover:border-[#00DF00] transition-all shadow-lg active:scale-90"
+            className={`p-2.5 rounded-full border transition-all shadow-lg active:scale-90 ${
+              isDark
+                ? 'bg-zinc-900/90 border-zinc-700 text-zinc-300 hover:text-white hover:border-[#00DF00]'
+                : 'bg-white border-[#B8D1C3] text-[#172C22] hover:border-[#087C3B]'
+            }`}
             title="Voltar ao topo"
           >
             <ArrowUp className="w-4 h-4" />
@@ -112,7 +138,7 @@ export const VerticalMode: React.FC = () => {
       {/* SECTION 1: CENÁRIO */}
       <section
         id={slidesMeta[0].hash}
-        className="relative min-h-screen flex flex-col justify-center px-4 sm:px-8 md:px-12 lg:px-16 py-12 sm:py-16 border-b border-zinc-900 overflow-hidden"
+        className="relative min-h-screen flex flex-col justify-center px-4 sm:px-8 md:px-12 lg:px-16 py-12 sm:py-16 border-b border-[var(--wbm-border)] overflow-hidden"
       >
         <NetworkMeshBg />
         <div className="relative z-10 max-w-7xl mx-auto w-full">
@@ -122,10 +148,12 @@ export const VerticalMode: React.FC = () => {
           <div className="flex justify-center mt-6">
             <button
               onClick={() => scrollToSection(slidesMeta[1].hash)}
-              className="flex flex-col items-center gap-1 text-zinc-500 hover:text-[#00DF00] transition-colors text-xs font-mono group"
+              className={`flex flex-col items-center gap-1 transition-colors text-xs font-mono group ${
+                isDark ? 'text-zinc-500 hover:text-[#00DF00]' : 'text-[#4A6B5B] hover:text-[#087C3B]'
+              }`}
             >
               <span>Explorar Desafios</span>
-              <ChevronDown className="w-4 h-4 animate-bounce text-[#00DF00]" />
+              <ChevronDown className={`w-4 h-4 animate-bounce ${isDark ? 'text-[#00DF00]' : 'text-[#087C3B]'}`} />
             </button>
           </div>
         </div>
@@ -134,7 +162,7 @@ export const VerticalMode: React.FC = () => {
       {/* SECTION 2: COMO SUPERAR ESSES DESAFIOS */}
       <section
         id={slidesMeta[1].hash}
-        className="relative min-h-screen flex flex-col justify-center px-4 sm:px-8 md:px-12 lg:px-16 py-12 sm:py-16 border-b border-zinc-900 overflow-hidden"
+        className="relative min-h-screen flex flex-col justify-center px-4 sm:px-8 md:px-12 lg:px-16 py-12 sm:py-16 border-b border-[var(--wbm-border)] overflow-hidden"
       >
         <NetworkMeshBg />
         <div className="relative z-10 max-w-7xl mx-auto w-full">
@@ -145,7 +173,7 @@ export const VerticalMode: React.FC = () => {
       {/* SECTION 3: WBM TECHNOLOGY */}
       <section
         id={slidesMeta[2].hash}
-        className="relative min-h-screen flex flex-col justify-center px-4 sm:px-8 md:px-12 lg:px-16 py-12 sm:py-16 border-b border-zinc-900 overflow-hidden"
+        className="relative min-h-screen flex flex-col justify-center px-4 sm:px-8 md:px-12 lg:px-16 py-12 sm:py-16 border-b border-[var(--wbm-border)] overflow-hidden"
       >
         <NetworkMeshBg />
         <div className="relative z-10 max-w-7xl mx-auto w-full">
@@ -156,7 +184,7 @@ export const VerticalMode: React.FC = () => {
       {/* SECTION 4: CLIENTES E PARCEIROS */}
       <section
         id={slidesMeta[3].hash}
-        className="relative min-h-screen flex flex-col justify-center px-4 sm:px-8 md:px-12 lg:px-16 py-12 sm:py-16 border-b border-zinc-900 overflow-hidden"
+        className="relative min-h-screen flex flex-col justify-center px-4 sm:px-8 md:px-12 lg:px-16 py-12 sm:py-16 border-b border-[var(--wbm-border)] overflow-hidden"
       >
         <NetworkMeshBg />
         <div className="relative z-10 max-w-7xl mx-auto w-full">

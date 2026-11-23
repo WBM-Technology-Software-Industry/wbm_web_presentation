@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { useTheme } from '../../context/ThemeContext';
 
 interface Node {
   x: number;
@@ -22,7 +23,13 @@ interface Packet {
 }
 
 export const ConnectedNetworkCanvas: React.FC = () => {
+  const { isDark } = useTheme();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const isDarkRef = useRef(isDark);
+
+  useEffect(() => {
+    isDarkRef.current = isDark;
+  }, [isDark]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -239,24 +246,27 @@ export const ConnectedNetworkCanvas: React.FC = () => {
       }
 
       // Draw Connection Lines
+      const isDark = isDarkRef.current;
       for (let k = 0; k < connections.length; k++) {
         const [i, j, dist] = connections[k];
         const a = nodes[i];
         const b = nodes[j];
 
-        const alpha = (1 - dist / maxDistance) * 0.22;
+        const alpha = (1 - dist / maxDistance) * (isDark ? 0.22 : 0.44);
         ctx.beginPath();
         ctx.moveTo(a.x, a.y);
         ctx.lineTo(b.x, b.y);
-        ctx.strokeStyle = `rgba(0, 223, 0, ${alpha.toFixed(3)})`;
-        ctx.lineWidth = a.isSpecial || b.isSpecial ? 0.9 : 0.6;
+        ctx.strokeStyle = isDark
+          ? `rgba(0, 223, 0, ${alpha.toFixed(3)})`
+          : `rgba(8, 124, 59, ${alpha.toFixed(3)})`;
+        ctx.lineWidth = a.isSpecial || b.isSpecial ? (isDark ? 0.9 : 1.35) : (isDark ? 0.6 : 0.85);
         ctx.stroke();
       }
 
       // Periodic packet emission (light pulses travelling along connections)
       if (!reducedMotion) {
         packetTimer += dt;
-        if (packetTimer > 0.4 && connections.length > 0 && packets.length < 12) {
+        if (packetTimer > 0.4 && connections.length > 0 && packets.length < 14) {
           packetTimer = 0;
           const randomConn = connections[Math.floor(Math.random() * connections.length)];
           const forward = Math.random() < 0.5;
@@ -286,10 +296,10 @@ export const ConnectedNetworkCanvas: React.FC = () => {
 
           // Packet glow and core
           ctx.beginPath();
-          ctx.arc(curX, curY, 2.2, 0, Math.PI * 2);
-          ctx.fillStyle = '#00DF00';
-          ctx.shadowColor = '#00DF00';
-          ctx.shadowBlur = 8;
+          ctx.arc(curX, curY, isDark ? 2.2 : 2.6, 0, Math.PI * 2);
+          ctx.fillStyle = isDark ? '#00DF00' : '#087C3B';
+          ctx.shadowColor = isDark ? '#00DF00' : 'rgba(8, 124, 59, 0.75)';
+          ctx.shadowBlur = isDark ? 8 : 7;
           ctx.fill();
           ctx.shadowBlur = 0; // reset
         }
@@ -305,30 +315,34 @@ export const ConnectedNetworkCanvas: React.FC = () => {
           // Special Infrastructure Node (with radar orbital ring)
           ctx.beginPath();
           ctx.arc(node.x, node.y, node.radius + 5 + Math.sin(node.pulsePhase) * 2, 0, Math.PI * 2);
-          ctx.strokeStyle = `rgba(0, 223, 0, ${(currentAlpha * 0.35).toFixed(2)})`;
-          ctx.lineWidth = 1;
+          ctx.strokeStyle = isDark
+            ? `rgba(0, 223, 0, ${(currentAlpha * 0.35).toFixed(2)})`
+            : `rgba(8, 124, 59, ${(currentAlpha * 0.65).toFixed(2)})`;
+          ctx.lineWidth = isDark ? 1 : 1.35;
           ctx.stroke();
 
           // Hexagonal contour or inner ring
           ctx.beginPath();
-          ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
-          ctx.fillStyle = '#00DF00';
-          ctx.shadowColor = '#00DF00';
-          ctx.shadowBlur = 10;
+          ctx.arc(node.x, node.y, isDark ? node.radius : node.radius + 0.5, 0, Math.PI * 2);
+          ctx.fillStyle = isDark ? '#00DF00' : '#087C3B';
+          ctx.shadowColor = isDark ? '#00DF00' : 'rgba(8, 124, 59, 0.5)';
+          ctx.shadowBlur = isDark ? 10 : 8;
           ctx.fill();
           ctx.shadowBlur = 0;
 
-          // Subtle text label if desktop
+          // Clear, crisp text label on desktop
           if (node.label) {
-            ctx.font = '500 9px monospace';
-            ctx.fillStyle = 'rgba(0, 223, 0, 0.45)';
+            ctx.font = isDark ? '500 9px monospace' : '600 10px monospace';
+            ctx.fillStyle = isDark ? 'rgba(0, 223, 0, 0.45)' : 'rgba(23, 44, 34, 0.88)';
             ctx.fillText(node.label, node.x + 12, node.y + 3);
           }
         } else {
           // Regular Network Node
           ctx.beginPath();
           ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(0, 223, 0, ${currentAlpha.toFixed(2)})`;
+          ctx.fillStyle = isDark
+            ? `rgba(0, 223, 0, ${currentAlpha.toFixed(2)})`
+            : `rgba(8, 124, 59, ${(currentAlpha * 0.95).toFixed(2)})`;
           ctx.fill();
         }
       }

@@ -16,6 +16,7 @@ import {
   Cpu,
   Sparkles,
 } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
 
 interface MobileGuidedExperienceProps {
   products: { product: Product; context: ProductUniverseContext }[];
@@ -34,6 +35,7 @@ export const MobileGuidedExperience: React.FC<MobileGuidedExperienceProps> = ({
   onSwitchToOrbitalMap,
   onBackToOverview,
 }) => {
+  const { isDark } = useTheme();
   // Active product index (default to the provided activeProductId or 0)
   const initialIndex = Math.max(
     0,
@@ -218,26 +220,35 @@ export const MobileGuidedExperience: React.FC<MobileGuidedExperienceProps> = ({
   return (
     <section
       aria-label="Experiência Guiada do Universo Indústria"
-      className="relative flex-1 w-full overflow-hidden flex flex-col justify-between select-none bg-black text-white px-2.5 sm:px-3 pt-1.5 pb-2"
+      className={`relative flex-1 w-full overflow-hidden flex flex-col justify-between select-none px-2.5 sm:px-3 pt-1.5 pb-2 transition-colors duration-300 ${isDark ? 'bg-[#0B1115] text-[#F5FAF7]' : 'bg-[#E6EFEB] text-[#172C22]'
+        }`}
     >
       {/* Ambient Cyber Background Glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[340px] h-[220px] bg-[radial-gradient(circle_at_center,rgba(0,223,0,0.09)_0%,transparent_75%)] pointer-events-none" />
+      <div
+        className={`absolute top-0 left-1/2 -translate-x-1/2 w-[340px] h-[220px] pointer-events-none transition-opacity duration-300 ${isDark
+          ? 'bg-[radial-gradient(circle_at_center,rgba(0,223,0,0.12)_0%,transparent_75%)] opacity-80'
+          : 'bg-[radial-gradient(circle_at_center,rgba(8,124,59,0.08)_0%,transparent_75%)] opacity-70'
+          }`}
+      />
 
       {/* 1. TOP BAR: UNIVERSE IDENTITY & ORBITAL MAP TOGGLE */}
       <div className="relative z-20 flex items-center justify-between gap-2 shrink-0 max-w-md mx-auto w-full px-1">
         {/* Left: Sector Identity Badge */}
         <button
           onClick={onBackToOverview}
-          className="flex items-center gap-1.5 bg-zinc-950/90 hover:bg-zinc-900 border border-zinc-800 hover:border-[#00DF00]/60 rounded-full px-2.5 py-1 shadow-md transition-all active:scale-95 text-left group"
+          className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 shadow-md transition-all active:scale-95 text-left group border ${isDark
+            ? 'bg-[#131F24]/90 hover:bg-[#19282E] border-[#2A423A] hover:border-[#00DF00]/60 text-white'
+            : 'bg-white hover:bg-zinc-50 border-[#B8D1C3] hover:border-[#087C3B]/60 text-[#172C22]'
+            }`}
           title="Retornar à visão geral dos 6 setores"
           aria-label="Voltar aos setores"
         >
-          <ArrowLeft className="w-3.5 h-3.5 text-[#00DF00] group-hover:-translate-x-0.5 transition-transform shrink-0" />
-          <span className="text-xs font-black tracking-wider text-white font-heading uppercase">
+          <ArrowLeft className={`w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform shrink-0 ${isDark ? 'text-[#00DF00]' : 'text-[#087C3B]'}`} />
+          <span className={`text-xs font-black tracking-wider font-heading uppercase ${isDark ? 'text-white' : 'text-[#172C22]'}`}>
             INDÚSTRIA
           </span>
-          <span className="text-zinc-600">|</span>
-          <span className="text-[10px] font-mono text-zinc-400">
+          <span className={isDark ? 'text-zinc-600' : 'text-zinc-400'}>|</span>
+          <span className={`text-[10px] font-mono ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>
             {products.length} soluções
           </span>
         </button>
@@ -245,11 +256,14 @@ export const MobileGuidedExperience: React.FC<MobileGuidedExperienceProps> = ({
         {/* Right: Switch to Free Orbital Map Mode */}
         <button
           onClick={onSwitchToOrbitalMap}
-          className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-800 hover:border-[#00DF00]/60 text-zinc-300 hover:text-white text-xs font-medium transition-all active:scale-95 shadow-sm group"
+          className={`flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-medium transition-all active:scale-95 shadow-sm group ${isDark
+            ? 'bg-[#131F24]/90 hover:bg-[#19282E] border-[#2A423A] hover:border-[#00DF00]/60 text-zinc-300 hover:text-white'
+            : 'bg-white hover:bg-zinc-50 border-[#B8D1C3] hover:border-[#087C3B]/60 text-[#172C22]'
+            }`}
           title="Alternar para o mapa orbital livre com zoom e arraste"
           aria-label="Abrir mapa orbital livre"
         >
-          <Compass className="w-3.5 h-3.5 text-[#00DF00] group-hover:rotate-45 transition-transform duration-300" />
+          <Compass className={`w-3.5 h-3.5 group-hover:rotate-45 transition-transform duration-300 ${isDark ? 'text-[#00DF00]' : 'text-[#087C3B]'}`} />
           <span>Explorar mapa</span>
         </button>
       </div>
@@ -264,20 +278,20 @@ export const MobileGuidedExperience: React.FC<MobileGuidedExperienceProps> = ({
         >
           <defs>
             <filter id="guidedGlow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feGaussianBlur stdDeviation={isDark ? "3" : "1.5"} result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
             <linearGradient id="activeBeamGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#00DF00" stopOpacity="0.85" />
-              <stop offset="60%" stopColor="#00FF00" stopOpacity="1" />
-              <stop offset="100%" stopColor="#00DF00" stopOpacity="0.9" />
+              <stop offset="0%" stopColor={isDark ? "#00DF00" : "#087C3B"} stopOpacity="0.85" />
+              <stop offset="60%" stopColor={isDark ? "#00FF00" : "#0A9446"} stopOpacity="1" />
+              <stop offset="100%" stopColor={isDark ? "#00DF00" : "#087C3B"} stopOpacity="0.9" />
             </linearGradient>
             <linearGradient id="inactiveLineGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#00DF00" stopOpacity="0.38" />
-              <stop offset="100%" stopColor="#00DF00" stopOpacity="0.18" />
+              <stop offset="0%" stopColor={isDark ? "#00DF00" : "#087C3B"} stopOpacity={isDark ? "0.38" : "0.32"} />
+              <stop offset="100%" stopColor={isDark ? "#00DF00" : "#087C3B"} stopOpacity={isDark ? "0.18" : "0.14"} />
             </linearGradient>
           </defs>
 
@@ -338,6 +352,8 @@ export const MobileGuidedExperience: React.FC<MobileGuidedExperienceProps> = ({
           {nodePositions.map((pos, i) => {
             const isCurrent = i === currentIndex;
             const pName = products[i].product.name;
+            const accentCol = isDark ? '#00DF00' : '#087C3B';
+            const accentActiveCol = isDark ? '#00FF00' : '#0A9446';
             return (
               <g
                 key={`satellite-${i}`}
@@ -355,7 +371,7 @@ export const MobileGuidedExperience: React.FC<MobileGuidedExperienceProps> = ({
                       cx={pos.x}
                       cy={pos.y}
                       r="10.5"
-                      fill="#00DF00"
+                      fill={accentCol}
                       fillOpacity="0.3"
                       filter="url(#guidedGlow)"
                     />
@@ -363,12 +379,12 @@ export const MobileGuidedExperience: React.FC<MobileGuidedExperienceProps> = ({
                       cx={pos.x}
                       cy={pos.y}
                       r="6"
-                      fill="#00FF00"
+                      fill={accentActiveCol}
                       stroke="#FFFFFF"
                       strokeWidth="1.8"
-                      className="drop-shadow-[0_0_8px_#00DF00]"
+                      className="drop-shadow-[0_0_8px_rgba(0,223,0,0.6)]"
                     />
-                    <circle cx={pos.x} cy={pos.y} r="2" fill="#000000" />
+                    <circle cx={pos.x} cy={pos.y} r="2" fill={isDark ? "#000000" : "#FFFFFF"} />
                   </>
                 ) : (
                   <>
@@ -377,9 +393,9 @@ export const MobileGuidedExperience: React.FC<MobileGuidedExperienceProps> = ({
                       cx={pos.x}
                       cy={pos.y}
                       r="4.5"
-                      fill="#18181b"
-                      stroke="#00DF00"
-                      strokeOpacity="0.65"
+                      fill={isDark ? "#18181b" : "#E2EBE5"}
+                      stroke={accentCol}
+                      strokeOpacity={isDark ? "0.65" : "0.5"}
                       strokeWidth="1.2"
                       className="group-hover:scale-125 transition-transform"
                     />
@@ -387,8 +403,8 @@ export const MobileGuidedExperience: React.FC<MobileGuidedExperienceProps> = ({
                       cx={pos.x}
                       cy={pos.y}
                       r="1.8"
-                      fill="#00DF00"
-                      fillOpacity="0.8"
+                      fill={accentCol}
+                      fillOpacity={isDark ? "0.8" : "0.7"}
                     />
                   </>
                 )}
@@ -399,7 +415,12 @@ export const MobileGuidedExperience: React.FC<MobileGuidedExperienceProps> = ({
           {/* Central Indústria Nucleus Node */}
           <g transform={`translate(${coreX}, ${coreY})`} className="cursor-default">
             {/* Outer soft glow */}
-            <circle r="22" fill="#00DF00" fillOpacity="0.16" filter="url(#guidedGlow)" />
+            <circle
+              r="22"
+              fill={isDark ? "#00DF00" : "#087C3B"}
+              fillOpacity={isDark ? "0.16" : "0.12"}
+              filter="url(#guidedGlow)"
+            />
             {/* Core Badge */}
             <rect
               x="-28"
@@ -407,19 +428,19 @@ export const MobileGuidedExperience: React.FC<MobileGuidedExperienceProps> = ({
               width="56"
               height="26"
               rx="13"
-              fill="#09090b"
-              stroke="#00DF00"
+              fill={isDark ? "#09090b" : "#FFFFFF"}
+              stroke={isDark ? "#00DF00" : "#087C3B"}
               strokeWidth="1.6"
-              className="drop-shadow-[0_0_12px_rgba(0,223,0,0.5)]"
+              className={isDark ? "drop-shadow-[0_0_12px_rgba(0,223,0,0.5)]" : "drop-shadow-md"}
             />
             {/* Icon + Label */}
             <g transform="translate(-19, -6)">
-              <Factory className="w-3 h-3 text-[#00DF00]" />
+              <Factory className={`w-3 h-3 ${isDark ? 'text-[#00DF00]' : 'text-[#087C3B]'}`} />
             </g>
             <text
               x="5"
               y="4"
-              fill="#FFFFFF"
+              fill={isDark ? "#FFFFFF" : "#172C22"}
               fontSize="8.5"
               fontWeight="bold"
               fontFamily="sans-serif"
@@ -450,11 +471,14 @@ export const MobileGuidedExperience: React.FC<MobileGuidedExperienceProps> = ({
                 ? 'none'
                 : 'transform 280ms cubic-bezier(0.16, 1, 0.3, 1)',
             }}
-            className={`group relative flex-1 bg-gradient-to-b from-zinc-900/95 via-zinc-950/98 to-black/95 border border-[#00DF00]/45 rounded-2xl p-4 sm:p-5 shadow-[0_0_30px_rgba(0,223,0,0.2)] hover:shadow-[0_0_40px_rgba(0,223,0,0.35)] hover:border-[#00DF00] transition-all cursor-pointer outline-none active:scale-[0.99] ${isTransitioning
-              ? slideDirection === 'left'
-                ? 'opacity-85 translate-x-1.5'
-                : 'opacity-85 -translate-x-1.5'
-              : 'opacity-100 translate-x-0'
+            className={`group relative flex-1 rounded-2xl p-4 sm:p-5 transition-all cursor-pointer outline-none active:scale-[0.99] border ${isDark
+              ? 'bg-gradient-to-b from-[#131F24] via-[#19282E] to-[#0B1115] border-[#2A423A] hover:border-[#00DF00] shadow-[0_0_30px_rgba(0,223,0,0.18)] hover:shadow-[0_0_40px_rgba(0,223,0,0.3)]'
+              : 'bg-white border-[#B8D1C3] hover:border-[#087C3B] shadow-lg shadow-emerald-950/5 hover:shadow-xl'
+              } ${isTransitioning
+                ? slideDirection === 'left'
+                  ? 'opacity-85 translate-x-1.5'
+                  : 'opacity-85 -translate-x-1.5'
+                : 'opacity-100 translate-x-0'
               }`}
           >
             {/* Integrated Optical Receptor Docking Pin on Top Border */}
@@ -469,57 +493,100 @@ export const MobileGuidedExperience: React.FC<MobileGuidedExperienceProps> = ({
               className="absolute -top-2.5 -translate-x-1/2 flex flex-col items-center pointer-events-none z-30"
             >
               {/* Luminous Core Pip */}
-              <div className="w-4 h-4 rounded-full bg-[#00FF00] border-2 border-white shadow-[0_0_12px_#00DF00] flex items-center justify-center">
-                <div className="w-1.5 h-1.5 rounded-full bg-black" />
+              <div
+                className={`w-4 h-4 rounded-full border-2 border-white flex items-center justify-center ${isDark
+                  ? 'bg-[#00FF00] shadow-[0_0_12px_#00DF00]'
+                  : 'bg-[#087C3B] shadow-[0_0_10px_rgba(8,124,59,0.4)]'
+                  }`}
+              >
+                <div className={`w-1.5 h-1.5 rounded-full ${isDark ? 'bg-black' : 'bg-white'}`} />
               </div>
               {/* Pulse Halo */}
-              <div className="absolute -inset-1 rounded-full bg-[#00DF00]/40 animate-ping" />
+              <div className={`absolute -inset-1 rounded-full animate-ping ${isDark ? 'bg-[#00DF00]/40' : 'bg-[#087C3B]/30'}`} />
               {/* Micro Beam Segment into Card */}
-              <div className="w-[2px] h-3.5 bg-gradient-to-b from-[#00FF00] to-transparent shadow-[0_0_6px_#00DF00]" />
+              <div
+                className={`w-[2px] h-3.5 shadow-sm ${isDark
+                  ? 'bg-gradient-to-b from-[#00FF00] to-transparent shadow-[0_0_6px_#00DF00]'
+                  : 'bg-gradient-to-b from-[#087C3B] to-transparent shadow-[0_0_6px_rgba(8,124,59,0.5)]'
+                  }`}
+              />
             </div>
 
             {/* Top Info Row: Category & Counter */}
             <div className="flex items-center justify-between gap-2 mb-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#00DF00]/10 border border-[#00DF00]/30 text-[10px] font-mono font-semibold text-[#00DF00] uppercase tracking-wider">
+              <span
+                className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold uppercase tracking-wider border ${isDark
+                  ? 'bg-[#00DF00]/10 border-[#00DF00]/30 text-[#00DF00]'
+                  : 'bg-[#087C3B]/10 border-[#087C3B]/30 text-[#087C3B]'
+                  }`}
+              >
                 {getProductCategoryIcon(product.category)}
                 <span>{product.category}</span>
               </span>
 
-              <span className="text-[11px] font-mono font-bold text-zinc-400 bg-zinc-900/80 px-2 py-0.5 rounded-md border border-zinc-800">
-                <span className="text-[#00DF00]">{String(currentIndex + 1).padStart(2, '0')}</span> / {products.length}
+              <span
+                className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded-md border ${isDark
+                  ? 'text-zinc-400 bg-zinc-900/80 border-zinc-800'
+                  : 'text-zinc-600 bg-zinc-100 border-zinc-200'
+                  }`}
+              >
+                <span className={isDark ? 'text-[#00DF00]' : 'text-[#087C3B]'}>
+                  {String(currentIndex + 1).padStart(2, '0')}
+                </span>{' '}
+                / {products.length}
               </span>
             </div>
 
             {/* Solution Name */}
-            <h2 className="text-xl sm:text-2xl font-black text-white font-heading tracking-tight leading-tight group-hover:text-[#00DF00] transition-colors">
+            <h2
+              className={`text-xl sm:text-2xl font-black font-heading tracking-tight leading-tight transition-colors ${isDark ? 'text-white group-hover:text-[#00DF00]' : 'text-[#172C22] group-hover:text-[#087C3B]'
+                }`}
+            >
               {product.name}
             </h2>
 
             {/* Commercial Short Headline */}
-            <p className="text-sm font-semibold text-[#00DF00] mt-1 font-sans flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 shrink-0 text-[#00DF00]" />
+            <p
+              className={`text-sm font-semibold mt-1 font-sans flex items-center gap-1.5 ${isDark ? 'text-[#00DF00]' : 'text-[#087C3B]'
+                }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 shrink-0" />
               <span className="truncate">{context.shortLabelOverride || product.shortLabel}</span>
             </p>
 
             {/* Commercial Challenge / Problem Resolution Description */}
-            <div className="mt-2.5 p-2.5 rounded-xl bg-zinc-900/60 border border-zinc-800/80">
-              <div className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-0.5 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#00DF00]" />
+            <div
+              className={`mt-2.5 p-2.5 rounded-xl border ${isDark
+                ? 'bg-[#0B1115]/80 border-[#2A423A]'
+                : 'bg-zinc-50 border-[#B8D1C3]'
+                }`}
+            >
+              <div
+                className={`text-[10px] font-mono uppercase tracking-wider mb-0.5 flex items-center gap-1 ${isDark ? 'text-zinc-400' : 'text-zinc-600'
+                  }`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${isDark ? 'bg-[#00DF00]' : 'bg-[#087C3B]'}`} />
                 <span>Desafio Operacional</span>
               </div>
-              <p className="text-xs text-zinc-300 leading-snug line-clamp-2">
+              <p className={`text-xs leading-snug line-clamp-2 ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>
                 {context.challenge}
               </p>
             </div>
 
             {/* Bottom Action Footer with CTA */}
-            <div className="mt-3.5 pt-2.5 border-t border-zinc-800/70 flex items-center justify-between text-xs text-zinc-300">
-              <span className="inline-flex items-center gap-1.5 font-bold text-[#00DF00] group-hover:underline">
+            <div
+              className={`mt-3.5 pt-2.5 border-t flex items-center justify-between text-xs ${isDark ? 'border-[#2A423A] text-zinc-300' : 'border-[#B8D1C3] text-zinc-700'
+                }`}
+            >
+              <span
+                className={`inline-flex items-center gap-1.5 font-bold group-hover:underline ${isDark ? 'text-[#00DF00]' : 'text-[#087C3B]'
+                  }`}
+              >
                 <span>Conhecer tecnologia</span>
                 <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
               </span>
 
-              <span className="text-[10px] font-mono text-zinc-500">
+              <span className={`text-[10px] font-mono ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
                 Toque para detalhes
               </span>
             </div>
@@ -530,34 +597,62 @@ export const MobileGuidedExperience: React.FC<MobileGuidedExperienceProps> = ({
             onClick={handleNext}
             aria-label={`Ver próxima tecnologia: ${nextItem.product.name}`}
             title={`Próxima solução: ${nextItem.product.name}`}
-            className="group/peek relative w-9 sm:w-10 rounded-2xl bg-gradient-to-b from-zinc-900/80 via-zinc-950/90 to-black/90 border border-zinc-800/90 hover:border-[#00DF00]/60 flex flex-col items-center justify-between py-3 transition-all shrink-0 active:scale-95 shadow-[0_0_20px_rgba(0,0,0,0.8)] overflow-hidden"
+            className={`group/peek relative w-9 sm:w-10 rounded-2xl border flex flex-col items-center justify-between py-3 transition-all shrink-0 active:scale-95 overflow-hidden ${isDark
+              ? 'bg-gradient-to-b from-zinc-900/80 via-zinc-950/90 to-black/90 border-zinc-800/90 hover:border-[#00DF00]/60 shadow-[0_0_20px_rgba(0,0,0,0.8)]'
+              : 'bg-white border-[#B8D1C3] hover:border-[#087C3B]/60 shadow-sm'
+              }`}
           >
             {/* Subtle neon glowing accent on left edge */}
-            <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-[#00DF00]/35 group-hover/peek:bg-[#00DF00] transition-colors" />
+            <div
+              className={`absolute left-0 top-0 bottom-0 w-[2px] transition-colors ${isDark
+                ? 'bg-[#00DF00]/35 group-hover/peek:bg-[#00DF00]'
+                : 'bg-[#087C3B]/35 group-hover/peek:bg-[#087C3B]'
+                }`}
+            />
 
             {/* Top Indicator */}
             <div className="flex flex-col items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#00DF00]/70 group-hover/peek:bg-[#00DF00] group-hover/peek:scale-125 transition-all" />
-              <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-tighter">PRÓX</span>
+              <span
+                className={`w-1.5 h-1.5 rounded-full transition-all ${isDark
+                  ? 'bg-[#00DF00]/70 group-hover/peek:bg-[#00DF00] group-hover/peek:scale-125'
+                  : 'bg-[#087C3B]/70 group-hover/peek:bg-[#087C3B] group-hover/peek:scale-125'
+                  }`}
+              />
+              <span className={`text-[8px] font-mono uppercase tracking-tighter ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
+                PRÓX
+              </span>
             </div>
 
             {/* Vertical rotated text of next product name */}
             <div className="flex-1 flex items-center justify-center my-2 [writing-mode:vertical-rl] rotate-180">
-              <span className="text-[11px] font-bold font-heading text-zinc-400 group-hover/peek:text-[#00DF00] transition-colors tracking-tight line-clamp-1 max-h-[140px] truncate">
+              <span
+                className={`text-[11px] font-bold font-heading transition-colors tracking-tight line-clamp-1 max-h-[140px] truncate ${isDark
+                  ? 'text-zinc-400 group-hover/peek:text-[#00DF00]'
+                  : 'text-zinc-600 group-hover/peek:text-[#087C3B]'
+                  }`}
+              >
                 {nextItem.product.name}
               </span>
             </div>
 
             {/* Arrow Icon */}
-            <ChevronRight className="w-4 h-4 text-zinc-500 group-hover/peek:text-[#00DF00] group-hover/peek:translate-x-0.5 transition-all" />
+            <ChevronRight
+              className={`w-4 h-4 transition-all ${isDark
+                ? 'text-zinc-500 group-hover/peek:text-[#00DF00] group-hover/peek:translate-x-0.5'
+                : 'text-zinc-400 group-hover/peek:text-[#087C3B] group-hover/peek:translate-x-0.5'
+                }`}
+            />
           </button>
         </div>
 
         {/* Gesture Instruction Hint */}
-        <div className="flex items-center justify-center gap-2 py-1 text-zinc-400 text-[11px] font-mono select-none">
-          <span className="text-[#00DF00] font-bold animate-pulse">←</span>
-          <span className="tracking-wide text-zinc-300 font-medium">Deslize para explorar</span>
-          <span className="text-[#00DF00] font-bold animate-pulse">→</span>
+        <div
+          className={`flex items-center justify-center gap-2 py-1 text-[11px] font-mono select-none ${isDark ? 'text-zinc-400' : 'text-zinc-600'
+            }`}
+        >
+          <span className={`font-bold animate-pulse ${isDark ? 'text-[#00DF00]' : 'text-[#087C3B]'}`}>←</span>
+          <span className={`tracking-wide font-medium ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>Deslize para explorar</span>
+          <span className={`font-bold animate-pulse ${isDark ? 'text-[#00DF00]' : 'text-[#087C3B]'}`}>→</span>
         </div>
       </div>
 
@@ -567,11 +662,14 @@ export const MobileGuidedExperience: React.FC<MobileGuidedExperienceProps> = ({
           {/* Previous Solution Button */}
           <button
             onClick={handlePrev}
-            className="w-11 h-11 rounded-full bg-zinc-900 border border-zinc-750 hover:border-[#00DF00]/70 text-zinc-200 hover:text-white flex items-center justify-center active:scale-90 transition-all shadow-md group"
+            className={`w-11 h-11 rounded-full border flex items-center justify-center active:scale-90 transition-all shadow-md group ${isDark
+              ? 'bg-[#131F24] border-[#2A423A] hover:border-[#00DF00]/70 text-zinc-200 hover:text-white'
+              : 'bg-white border-[#B8D1C3] hover:border-[#087C3B]/70 text-[#172C22]'
+              }`}
             title={`Solução anterior: ${prevItem.product.name}`}
             aria-label={`Solução anterior (${prevItem.product.name})`}
           >
-            <ChevronLeft className="w-5 h-5 text-[#00DF00] group-hover:-translate-x-0.5 transition-transform" />
+            <ChevronLeft className={`w-5 h-5 group-hover:-translate-x-0.5 transition-transform ${isDark ? 'text-[#00DF00]' : 'text-[#087C3B]'}`} />
           </button>
 
           {/* Center Progress Dots Track & Dynamic Indicator */}
@@ -585,8 +683,12 @@ export const MobileGuidedExperience: React.FC<MobileGuidedExperienceProps> = ({
                     onClick={() => goToIndex(idx, idx > currentIndex ? 'left' : 'right')}
                     aria-label={`Ir para ${p.product.name}`}
                     className={`h-1.5 rounded-full transition-all duration-300 ${isCur
-                      ? 'w-5 bg-[#00DF00] shadow-[0_0_8px_#00DF00]'
-                      : 'w-1.5 bg-zinc-700 hover:bg-zinc-500'
+                      ? isDark
+                        ? 'w-5 bg-[#00DF00] shadow-[0_0_8px_#00DF00]'
+                        : 'w-5 bg-[#087C3B] shadow-[0_0_8px_rgba(8,124,59,0.5)]'
+                      : isDark
+                        ? 'w-1.5 bg-zinc-700 hover:bg-zinc-500'
+                        : 'w-1.5 bg-zinc-300 hover:bg-zinc-400'
                       }`}
                   />
                 );
@@ -594,14 +696,17 @@ export const MobileGuidedExperience: React.FC<MobileGuidedExperienceProps> = ({
             </div>
 
             {/* Counter and Next Solution Indicator */}
-            <div className="flex items-center justify-center gap-2 text-[10px] font-mono text-zinc-400">
+            <div className={`flex items-center justify-center gap-2 text-[10px] font-mono ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>
               <span>
-                <strong className="text-[#00DF00]">{String(currentIndex + 1).padStart(2, '0')}</strong> de {products.length} soluções
+                <strong className={isDark ? 'text-[#00DF00]' : 'text-[#087C3B]'}>
+                  {String(currentIndex + 1).padStart(2, '0')}
+                </strong>{' '}
+                de {products.length} soluções
               </span>
-              <span className="text-zinc-600">|</span>
+              <span className={isDark ? 'text-zinc-600' : 'text-zinc-400'}>|</span>
               <span className="truncate max-w-[130px] sm:max-w-[160px]">
-                <span className="text-zinc-500">Próx:</span>{' '}
-                <span className="text-zinc-200 font-semibold">{nextItem.product.name}</span>
+                <span className={isDark ? 'text-zinc-500' : 'text-zinc-400'}>Próx:</span>{' '}
+                <span className={`font-semibold ${isDark ? 'text-zinc-200' : 'text-[#172C22]'}`}>{nextItem.product.name}</span>
               </span>
             </div>
           </div>
@@ -609,11 +714,14 @@ export const MobileGuidedExperience: React.FC<MobileGuidedExperienceProps> = ({
           {/* Next Solution Button */}
           <button
             onClick={handleNext}
-            className="w-11 h-11 rounded-full bg-zinc-900 border border-zinc-750 hover:border-[#00DF00]/70 text-zinc-200 hover:text-white flex items-center justify-center active:scale-90 transition-all shadow-md group"
+            className={`w-11 h-11 rounded-full border flex items-center justify-center active:scale-90 transition-all shadow-md group ${isDark
+              ? 'bg-[#131F24] border-[#2A423A] hover:border-[#00DF00]/70 text-zinc-200 hover:text-white'
+              : 'bg-white border-[#B8D1C3] hover:border-[#087C3B]/70 text-[#172C22]'
+              }`}
             title={`Próxima solução: ${nextItem.product.name}`}
             aria-label={`Próxima solução (${nextItem.product.name})`}
           >
-            <ChevronRight className="w-5 h-5 text-[#00DF00] group-hover:translate-x-0.5 transition-transform" />
+            <ChevronRight className={`w-5 h-5 group-hover:translate-x-0.5 transition-transform ${isDark ? 'text-[#00DF00]' : 'text-[#087C3B]'}`} />
           </button>
         </div>
       </div>

@@ -14,6 +14,7 @@ import {
   ChevronRight,
   Cpu,
 } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
 
 interface MobileSectorOverviewProps {
   onSelectUniverse: (universeId: UniverseId) => void;
@@ -22,6 +23,7 @@ interface MobileSectorOverviewProps {
 export const MobileSectorOverview: React.FC<MobileSectorOverviewProps> = ({
   onSelectUniverse,
 }) => {
+  const { isDark } = useTheme();
   const [selectedSector, setSelectedSector] = useState<UniverseId | null>(null);
 
   const renderIcon = (iconName: string, className = 'w-5 h-5') => {
@@ -58,25 +60,39 @@ export const MobileSectorOverview: React.FC<MobileSectorOverviewProps> = ({
   return (
     <section
       aria-label="Visão Geral dos Setores de Mercado"
-      className="relative flex-1 w-full overflow-hidden flex flex-col justify-between select-none bg-black text-white px-3 py-2"
+      className={`relative flex-1 w-full overflow-hidden flex flex-col justify-between select-none px-3 py-2 transition-colors duration-200 ${
+        isDark ? 'bg-[#0B1115] text-white' : 'bg-[#E6EFEB] text-[#172C22]'
+      }`}
     >
       {/* Background Cyber Glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] h-[340px] bg-[radial-gradient(circle_at_center,rgba(0,223,0,0.08)_0%,transparent_75%)] pointer-events-none" />
+      <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] h-[340px] pointer-events-none ${
+        isDark
+          ? 'bg-[radial-gradient(circle_at_center,rgba(0,223,0,0.08)_0%,transparent_75%)]'
+          : 'bg-[radial-gradient(circle_at_center,rgba(8,124,59,0.06)_0%,transparent_75%)]'
+      }`} />
 
       {/* 1. HEADER SECTION (Título e Descrição do Usuário) */}
       <div className="text-center pt-1.5 pb-2 px-2 z-20 shrink-0 max-w-md mx-auto w-full">
-        <div className="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-zinc-950/90 border border-[#00DF00]/40 text-[10px] font-mono font-semibold text-[#00DF00] uppercase tracking-wider mb-1.5 shadow-[0_0_12px_rgba(0,223,0,0.2)]">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#00DF00] animate-pulse" />
+        <div className={`inline-flex items-center gap-2 px-3 py-0.5 rounded-full text-[10px] font-mono font-semibold uppercase tracking-wider mb-1.5 ${
+          isDark
+            ? 'bg-zinc-950/90 border border-[#00DF00]/40 text-[#00DF00] shadow-[0_0_12px_rgba(0,223,0,0.2)]'
+            : 'bg-white border border-[#B8D1C3] text-[#087C3B] shadow-sm'
+        }`}>
+          <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${isDark ? 'bg-[#00DF00]' : 'bg-[#087C3B]'}`} />
           <span>PORTFÓLIO INTERATIVO</span>
-          <span className="text-zinc-600">|</span>
-          <span className="text-zinc-400">6 SETORES</span>
+          <span className={isDark ? 'text-zinc-600' : 'text-zinc-300'}>|</span>
+          <span className={isDark ? 'text-zinc-400' : 'text-[#4A6B5B]'}>6 SETORES</span>
         </div>
 
-        <h1 className="text-xl sm:text-2xl font-black font-heading text-white tracking-tight leading-tight">
+        <h1 className={`text-xl sm:text-2xl font-black font-heading tracking-tight leading-tight ${
+          isDark ? 'text-white' : 'text-[#172C22]'
+        }`}>
           Explore nossas tecnologias
         </h1>
 
-        <p className="text-xs text-zinc-400 mt-1 max-w-xs mx-auto leading-relaxed">
+        <p className={`text-xs mt-1 max-w-xs mx-auto leading-relaxed ${
+          isDark ? 'text-zinc-400' : 'text-[#4A6B5B]'
+        }`}>
           Selecione um setor para conhecer nossas soluções conectadas.
         </p>
       </div>
@@ -108,68 +124,68 @@ export const MobileSectorOverview: React.FC<MobileSectorOverviewProps> = ({
           {/* Left Top: Saneamento (95, 55) */}
           <path
             d="M 190 170 Q 140 110 95 55"
-            stroke="#00DF00"
+            stroke={isDark ? '#00DF00' : '#087C3B'}
             strokeWidth={selectedSector === 'saneamento' ? '2.5' : '1.2'}
-            strokeOpacity={selectedSector === 'saneamento' ? '0.9' : '0.28'}
+            strokeOpacity={selectedSector === 'saneamento' ? '0.9' : isDark ? '0.28' : '0.35'}
             strokeDasharray={selectedSector === 'saneamento' ? 'none' : '3 3'}
-            filter={selectedSector === 'saneamento' ? 'url(#overviewGlow)' : undefined}
+            filter={selectedSector === 'saneamento' && isDark ? 'url(#overviewGlow)' : undefined}
           />
           {/* Left Mid: Energia (95, 170) */}
           <path
             d="M 190 170 L 95 170"
-            stroke="#00DF00"
+            stroke={isDark ? '#00DF00' : '#087C3B'}
             strokeWidth={selectedSector === 'energia' ? '2.5' : '1.2'}
-            strokeOpacity={selectedSector === 'energia' ? '0.9' : '0.28'}
+            strokeOpacity={selectedSector === 'energia' ? '0.9' : isDark ? '0.28' : '0.35'}
             strokeDasharray={selectedSector === 'energia' ? 'none' : '3 3'}
-            filter={selectedSector === 'energia' ? 'url(#overviewGlow)' : undefined}
+            filter={selectedSector === 'energia' && isDark ? 'url(#overviewGlow)' : undefined}
           />
           {/* Left Bottom: Pesquisa (95, 285) */}
           <path
             d="M 190 170 Q 140 230 95 285"
-            stroke="#00DF00"
+            stroke={isDark ? '#00DF00' : '#087C3B'}
             strokeWidth={selectedSector === 'pesquisa-laboratorios' ? '2.5' : '1.2'}
-            strokeOpacity={selectedSector === 'pesquisa-laboratorios' ? '0.9' : '0.28'}
+            strokeOpacity={selectedSector === 'pesquisa-laboratorios' ? '0.9' : isDark ? '0.28' : '0.35'}
             strokeDasharray={selectedSector === 'pesquisa-laboratorios' ? 'none' : '3 3'}
-            filter={selectedSector === 'pesquisa-laboratorios' ? 'url(#overviewGlow)' : undefined}
+            filter={selectedSector === 'pesquisa-laboratorios' && isDark ? 'url(#overviewGlow)' : undefined}
           />
 
           {/* Right Top: Indústria (285, 55) */}
           <path
             d="M 190 170 Q 240 110 285 55"
-            stroke="#00DF00"
+            stroke={isDark ? '#00DF00' : '#087C3B'}
             strokeWidth={selectedSector === 'industria' ? '2.5' : '1.4'}
-            strokeOpacity={selectedSector === 'industria' ? '0.95' : '0.35'}
+            strokeOpacity={selectedSector === 'industria' ? '0.95' : isDark ? '0.35' : '0.40'}
             strokeDasharray={selectedSector === 'industria' ? 'none' : '3 3'}
-            filter={selectedSector === 'industria' ? 'url(#overviewGlow)' : undefined}
+            filter={selectedSector === 'industria' && isDark ? 'url(#overviewGlow)' : undefined}
           />
           {/* Right Mid: Piscicultura (285, 170) */}
           <path
             d="M 190 170 L 285 170"
-            stroke="#00DF00"
+            stroke={isDark ? '#00DF00' : '#087C3B'}
             strokeWidth={selectedSector === 'piscicultura' ? '2.5' : '1.2'}
-            strokeOpacity={selectedSector === 'piscicultura' ? '0.9' : '0.28'}
+            strokeOpacity={selectedSector === 'piscicultura' ? '0.9' : isDark ? '0.28' : '0.35'}
             strokeDasharray={selectedSector === 'piscicultura' ? 'none' : '3 3'}
-            filter={selectedSector === 'piscicultura' ? 'url(#overviewGlow)' : undefined}
+            filter={selectedSector === 'piscicultura' && isDark ? 'url(#overviewGlow)' : undefined}
           />
           {/* Right Bottom: Bioflorestal (285, 285) */}
           <path
             d="M 190 170 Q 240 230 285 285"
-            stroke="#00DF00"
+            stroke={isDark ? '#00DF00' : '#087C3B'}
             strokeWidth={selectedSector === 'bioflorestal' ? '2.5' : '1.2'}
-            strokeOpacity={selectedSector === 'bioflorestal' ? '0.9' : '0.28'}
+            strokeOpacity={selectedSector === 'bioflorestal' ? '0.9' : isDark ? '0.28' : '0.35'}
             strokeDasharray={selectedSector === 'bioflorestal' ? 'none' : '3 3'}
-            filter={selectedSector === 'bioflorestal' ? 'url(#overviewGlow)' : undefined}
+            filter={selectedSector === 'bioflorestal' && isDark ? 'url(#overviewGlow)' : undefined}
           />
 
           {/* Animated Pulses on Indústria & Saneamento main conduits */}
-          <circle r="2.8" fill="#FFFFFF" filter="url(#overviewGlow)">
+          <circle r="2.8" fill={isDark ? '#FFFFFF' : '#087C3B'} filter={isDark ? 'url(#overviewGlow)' : undefined}>
             <animateMotion
               path="M 190 170 Q 240 110 285 55"
               dur="1.8s"
               repeatCount="indefinite"
             />
           </circle>
-          <circle r="2.5" fill="#00FF00" filter="url(#overviewGlow)">
+          <circle r="2.5" fill={isDark ? '#00FF00' : '#087C3B'} filter={isDark ? 'url(#overviewGlow)' : undefined}>
             <animateMotion
               path="M 190 170 Q 140 110 95 55"
               dur="2.2s"
@@ -179,9 +195,9 @@ export const MobileSectorOverview: React.FC<MobileSectorOverviewProps> = ({
 
           {/* Center Nucleus Graphic in SVG */}
           <g transform="translate(190, 170)">
-            <circle r="22" fill="#00DF00" fillOpacity="0.12" filter="url(#overviewGlow)" />
-            <circle r="16" fill="#090d09" stroke="#00DF00" strokeWidth="1.5" />
-            <circle r="3" fill="#00FF00" />
+            <circle r="22" fill={isDark ? '#00DF00' : '#087C3B'} fillOpacity={isDark ? '0.12' : '0.15'} filter={isDark ? 'url(#overviewGlow)' : undefined} />
+            <circle r="16" fill={isDark ? '#090d09' : '#FFFFFF'} stroke={isDark ? '#00DF00' : '#087C3B'} strokeWidth="1.5" />
+            <circle r="3" fill={isDark ? '#00FF00' : '#087C3B'} />
           </g>
         </svg>
 
@@ -198,10 +214,14 @@ export const MobileSectorOverview: React.FC<MobileSectorOverviewProps> = ({
                 <button
                   key={uId}
                   onClick={() => handleSectorClick(uId)}
-                  className={`group relative flex items-center gap-2.5 p-3 sm:p-3.5 rounded-2xl bg-gradient-to-b from-zinc-900/90 via-zinc-950/95 to-black/95 border text-left transition-all duration-200 active:scale-95 cursor-pointer shadow-lg outline-none ${
+                  className={`group relative flex items-center gap-2.5 p-3 sm:p-3.5 rounded-2xl border text-left transition-all duration-200 active:scale-95 cursor-pointer shadow-lg outline-none ${
                     isSelected
-                      ? 'border-[#00DF00] ring-2 ring-[#00DF00]/60 shadow-[0_0_25px_rgba(0,223,0,0.5)] bg-zinc-900'
-                      : 'border-zinc-800/90 hover:border-[#00DF00]/70 hover:shadow-[0_0_20px_rgba(0,223,0,0.2)]'
+                      ? isDark
+                        ? 'border-[#00DF00] ring-2 ring-[#00DF00]/60 shadow-[0_0_25px_rgba(0,223,0,0.5)] bg-zinc-900'
+                        : 'border-[#087C3B] ring-2 ring-[#087C3B]/60 shadow-[0_4px_20px_rgba(8,124,59,0.3)] bg-[#D7EBDD]'
+                      : isDark
+                      ? 'bg-gradient-to-b from-zinc-900/90 via-zinc-950/95 to-black/95 border-zinc-800/90 hover:border-[#00DF00]/70 hover:shadow-[0_0_20px_rgba(0,223,0,0.2)]'
+                      : 'bg-white border-[#B8D1C3] hover:border-[#087C3B]/70 hover:shadow-md'
                   }`}
                   aria-label={`Entrar no setor ${u.name}. ${count} soluções disponíveis.`}
                 >
@@ -209,8 +229,12 @@ export const MobileSectorOverview: React.FC<MobileSectorOverviewProps> = ({
                   <div
                     className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border transition-all ${
                       isSelected
-                        ? 'bg-[#00DF00] text-black border-[#00DF00] shadow-[0_0_12px_#00DF00]'
-                        : 'bg-zinc-900/90 text-[#00DF00] border-zinc-800 group-hover:border-[#00DF00]/50 group-hover:scale-105'
+                        ? isDark
+                          ? 'bg-[#00DF00] text-black border-[#00DF00] shadow-[0_0_12px_#00DF00]'
+                          : 'bg-[#087C3B] text-white border-[#087C3B] shadow-[0_2px_8px_rgba(8,124,59,0.3)]'
+                        : isDark
+                        ? 'bg-zinc-900/90 text-[#00DF00] border-zinc-800 group-hover:border-[#00DF00]/50 group-hover:scale-105'
+                        : 'bg-[#D7EBDD] text-[#087C3B] border-[#B8D1C3] group-hover:border-[#087C3B] group-hover:scale-105'
                     }`}
                   >
                     {renderIcon(u.iconName, 'w-4 h-4')}
@@ -218,17 +242,23 @@ export const MobileSectorOverview: React.FC<MobileSectorOverviewProps> = ({
 
                   {/* Sector Metadata */}
                   <div className="flex-1 min-w-0">
-                    <h2 className="text-xs sm:text-sm font-bold text-white font-heading tracking-tight leading-snug truncate group-hover:text-[#00DF00] transition-colors">
+                    <h2 className={`text-xs sm:text-sm font-bold font-heading tracking-tight leading-snug truncate transition-colors ${
+                      isDark ? 'text-white group-hover:text-[#00DF00]' : 'text-[#172C22] group-hover:text-[#087C3B]'
+                    }`}>
                       {u.name}
                     </h2>
-                    <span className="text-[10px] font-mono font-medium text-zinc-400 flex items-center gap-1 mt-0.5">
-                      <span className="w-1 h-1 rounded-full bg-[#00DF00]" />
+                    <span className={`text-[10px] font-mono font-medium flex items-center gap-1 mt-0.5 ${
+                      isDark ? 'text-zinc-400' : 'text-[#4A6B5B]'
+                    }`}>
+                      <span className={`w-1 h-1 rounded-full ${isDark ? 'bg-[#00DF00]' : 'bg-[#087C3B]'}`} />
                       <span>{count} soluções</span>
                     </span>
                   </div>
 
                   {/* Arrow Cue */}
-                  <ChevronRight className="w-4 h-4 text-zinc-500 group-hover:text-[#00DF00] group-hover:translate-x-0.5 transition-all shrink-0" />
+                  <ChevronRight className={`w-4 h-4 transition-all shrink-0 ${
+                    isDark ? 'text-zinc-500 group-hover:text-[#00DF00] group-hover:translate-x-0.5' : 'text-[#6B8B7B] group-hover:text-[#087C3B] group-hover:translate-x-0.5'
+                  }`} />
                 </button>
               );
             })}
@@ -246,12 +276,18 @@ export const MobileSectorOverview: React.FC<MobileSectorOverviewProps> = ({
                 <button
                   key={uId}
                   onClick={() => handleSectorClick(uId)}
-                  className={`group relative flex items-center gap-2.5 p-3 sm:p-3.5 rounded-2xl bg-gradient-to-b from-zinc-900/90 via-zinc-950/95 to-black/95 border text-left transition-all duration-200 active:scale-95 cursor-pointer shadow-lg outline-none ${
+                  className={`group relative flex items-center gap-2.5 p-3 sm:p-3.5 rounded-2xl border text-left transition-all duration-200 active:scale-95 cursor-pointer shadow-lg outline-none ${
                     isSelected
-                      ? 'border-[#00DF00] ring-2 ring-[#00DF00]/60 shadow-[0_0_25px_rgba(0,223,0,0.5)] bg-zinc-900'
+                      ? isDark
+                        ? 'border-[#00DF00] ring-2 ring-[#00DF00]/60 shadow-[0_0_25px_rgba(0,223,0,0.5)] bg-zinc-900'
+                        : 'border-[#087C3B] ring-2 ring-[#087C3B]/60 shadow-[0_4px_20px_rgba(8,124,59,0.3)] bg-[#D7EBDD]'
                       : isIndustria
-                      ? 'border-[#00DF00]/45 hover:border-[#00DF00] hover:shadow-[0_0_25px_rgba(0,223,0,0.3)]'
-                      : 'border-zinc-800/90 hover:border-[#00DF00]/70 hover:shadow-[0_0_20px_rgba(0,223,0,0.2)]'
+                      ? isDark
+                        ? 'bg-gradient-to-b from-zinc-900/90 via-zinc-950/95 to-black/95 border-[#00DF00]/45 hover:border-[#00DF00] hover:shadow-[0_0_25px_rgba(0,223,0,0.3)]'
+                        : 'bg-white border-[#087C3B]/50 hover:border-[#087C3B] hover:shadow-md'
+                      : isDark
+                      ? 'bg-gradient-to-b from-zinc-900/90 via-zinc-950/95 to-black/95 border-zinc-800/90 hover:border-[#00DF00]/70 hover:shadow-[0_0_20px_rgba(0,223,0,0.2)]'
+                      : 'bg-white border-[#B8D1C3] hover:border-[#087C3B]/70 hover:shadow-md'
                   }`}
                   aria-label={`Entrar no setor ${u.name}. ${count} soluções disponíveis.`}
                 >
@@ -259,10 +295,16 @@ export const MobileSectorOverview: React.FC<MobileSectorOverviewProps> = ({
                   <div
                     className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border transition-all ${
                       isSelected
-                        ? 'bg-[#00DF00] text-black border-[#00DF00] shadow-[0_0_12px_#00DF00]'
+                        ? isDark
+                          ? 'bg-[#00DF00] text-black border-[#00DF00] shadow-[0_0_12px_#00DF00]'
+                          : 'bg-[#087C3B] text-white border-[#087C3B] shadow-[0_2px_8px_rgba(8,124,59,0.3)]'
                         : isIndustria
-                        ? 'bg-[#00DF00]/15 text-[#00DF00] border-[#00DF00]/50 group-hover:bg-[#00DF00] group-hover:text-black group-hover:scale-105 shadow-[0_0_10px_rgba(0,223,0,0.25)]'
-                        : 'bg-zinc-900/90 text-[#00DF00] border-zinc-800 group-hover:border-[#00DF00]/50 group-hover:scale-105'
+                        ? isDark
+                          ? 'bg-[#00DF00]/15 text-[#00DF00] border-[#00DF00]/50 group-hover:bg-[#00DF00] group-hover:text-black group-hover:scale-105 shadow-[0_0_10px_rgba(0,223,0,0.25)]'
+                          : 'bg-[#D7EBDD] text-[#087C3B] border-[#087C3B]/50 group-hover:bg-[#087C3B] group-hover:text-white group-hover:scale-105'
+                        : isDark
+                        ? 'bg-zinc-900/90 text-[#00DF00] border-zinc-800 group-hover:border-[#00DF00]/50 group-hover:scale-105'
+                        : 'bg-[#D7EBDD] text-[#087C3B] border-[#B8D1C3] group-hover:border-[#087C3B] group-hover:scale-105'
                     }`}
                   >
                     {renderIcon(u.iconName, 'w-4 h-4')}
@@ -271,18 +313,26 @@ export const MobileSectorOverview: React.FC<MobileSectorOverviewProps> = ({
                   {/* Sector Metadata */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <h2 className="text-xs sm:text-sm font-bold text-white font-heading tracking-tight leading-snug truncate group-hover:text-[#00DF00] transition-colors">
+                      <h2 className={`text-xs sm:text-sm font-bold font-heading tracking-tight leading-snug truncate transition-colors ${
+                        isDark ? 'text-white group-hover:text-[#00DF00]' : 'text-[#172C22] group-hover:text-[#087C3B]'
+                      }`}>
                         {u.name}
                       </h2>
                     </div>
-                    <span className="text-[10px] font-mono font-medium text-zinc-400 flex items-center gap-1 mt-0.5">
-                      <span className={`w-1 h-1 rounded-full ${isIndustria ? 'bg-[#00DF00] animate-pulse' : 'bg-[#00DF00]'}`} />
-                      <span className={isIndustria ? 'text-zinc-300 font-semibold' : ''}>{count} soluções</span>
+                    <span className={`text-[10px] font-mono font-medium flex items-center gap-1 mt-0.5 ${
+                      isDark ? 'text-zinc-400' : 'text-[#4A6B5B]'
+                    }`}>
+                      <span className={`w-1 h-1 rounded-full ${
+                        isDark ? 'bg-[#00DF00]' : 'bg-[#087C3B]'
+                      } ${isIndustria ? 'animate-pulse' : ''}`} />
+                      <span className={isIndustria ? isDark ? 'text-zinc-300 font-semibold' : 'text-[#172C22] font-semibold' : ''}>{count} soluções</span>
                     </span>
                   </div>
 
                   {/* Arrow Cue */}
-                  <ChevronRight className="w-4 h-4 text-zinc-500 group-hover:text-[#00DF00] group-hover:translate-x-0.5 transition-all shrink-0" />
+                  <ChevronRight className={`w-4 h-4 transition-all shrink-0 ${
+                    isDark ? 'text-zinc-500 group-hover:text-[#00DF00] group-hover:translate-x-0.5' : 'text-[#6B8B7B] group-hover:text-[#087C3B] group-hover:translate-x-0.5'
+                  }`} />
                 </button>
               );
             })}

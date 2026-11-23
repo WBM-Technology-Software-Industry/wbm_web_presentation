@@ -24,6 +24,7 @@ import { NetworkMeshBg } from '../ui/NetworkMeshBg';
 import { SolutionDetailPanel } from './SolutionDetailPanel';
 import { MobileGuidedExperience } from './MobileGuidedExperience';
 import { MobileSectorOverview } from './MobileSectorOverview';
+import { useTheme } from '../../context/ThemeContext';
 
 interface PortfolioModeProps {
   onReturnHome: () => void;
@@ -34,6 +35,7 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
   onReturnHome,
   onSelectSolutionDetail,
 }) => {
+  const { isDark } = useTheme();
   // Navigation State with URL parameter support for direct sharing/testing
   const [selectedUniverseId, setSelectedUniverseId] = useState<UniverseId | null>(() => {
     if (typeof window === 'undefined') return null;
@@ -379,7 +381,7 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
     };
   };
 
-  // Desktop Adaptive Bilateral Layout for Child Solutions (PRESERVED UNCHANGED):
+  // Desktop Adaptive Bilateral Layout for Child Solutions:
   // Distributes products in symmetrical Left and Right flanking columns anchored to the universe node.
   // Guarantees ZERO collision between labels, generous clearance with the universe node, and fits any screen.
   const getSolutionBilateralPosition = (idx: number, total: number, center: { x: number; y: number }) => {
@@ -387,11 +389,11 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
     const totalRight = Math.floor(total / 2);
     const isLeft = idx < totalLeft;
 
-    const colOffsetX = 295;
-    const pillHalfWidth = 132;
+    const colOffsetX = 385;
+    const pillHalfWidth = 175;
 
     const maxItems = Math.max(totalLeft, totalRight);
-    const stepY = maxItems <= 2 ? 70 : maxItems <= 4 ? 64 : maxItems <= 6 ? 56 : 52;
+    const stepY = maxItems <= 2 ? 88 : maxItems <= 4 ? 78 : maxItems <= 6 ? 72 : 66;
 
     if (isLeft) {
       const i = idx;
@@ -433,10 +435,10 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
       baseCameraScale = Math.min(fitW, fitH, 0.95);
       baseCameraScale = Math.max(0.78, baseCameraScale);
     } else {
-      const fitW = safeW / 680;
-      const fitH = safeH / 470;
-      baseCameraScale = Math.min(fitW, fitH, 1.12);
-      baseCameraScale = Math.max(0.65, baseCameraScale);
+      const fitW = safeW / 820;
+      const fitH = safeH / 520;
+      baseCameraScale = Math.min(fitW, fitH, 1.15);
+      baseCameraScale = Math.max(0.68, baseCameraScale);
     }
     baseTranslateX = 0;
     baseTranslateY = 0;
@@ -449,10 +451,10 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
       baseTranslateX = 0;
       baseTranslateY = 0;
     } else {
-      const fitW = safeW / 890;
-      const fitH = safeH / 430;
-      baseCameraScale = Math.min(fitW, fitH, 1.05);
-      baseCameraScale = Math.max(0.65, baseCameraScale);
+      const fitW = safeW / 1150;
+      const fitH = safeH / 510;
+      baseCameraScale = Math.min(fitW, fitH, 1.18);
+      baseCameraScale = Math.max(0.70, baseCameraScale);
       baseTranslateX = -activeUniverse.coord.x;
       baseTranslateY = -activeUniverse.coord.y;
     }
@@ -742,12 +744,12 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
     mobileViewMode === 'guided';
 
   return (
-    <div className="relative w-full min-h-[calc(100vh-65px)] bg-black text-white flex flex-col justify-between overflow-hidden select-text">
+    <div className="relative w-full min-h-[calc(100vh-65px)] bg-[var(--wbm-bg)] text-[var(--wbm-text)] flex flex-col justify-between overflow-hidden select-text transition-colors duration-200">
       {/* Background Cyber Mesh */}
       <NetworkMeshBg />
 
       {/* Top Breadcrumb & Controls Bar (Hidden on Mobile Overview since MobileSectorOverview provides its own rich header) */}
-      <header className={`relative z-30 w-full max-w-full bg-black/85 backdrop-blur-md border-b border-zinc-900 px-3 sm:px-8 py-2 sm:py-2.5 overflow-hidden ${
+      <header className={`relative z-30 w-full max-w-full bg-[var(--wbm-bg)]/90 backdrop-blur-md border-b border-[var(--wbm-border)] px-3 sm:px-8 py-2 sm:py-2.5 overflow-hidden transition-colors duration-200 ${
         isMobile && !selectedUniverseId ? 'hidden' : 'block'
       }`}>
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-3 min-w-0">
@@ -756,19 +758,21 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
           <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm font-medium">
             <button
               onClick={onReturnHome}
-              className="text-zinc-400 hover:text-white transition-colors flex items-center gap-1.5"
+              className={`${isDark ? 'text-zinc-400 hover:text-white' : 'text-[#4A6B5B] hover:text-[#172C22]'} transition-colors flex items-center gap-1.5`}
               title="Voltar à tela inicial"
             >
-              <ArrowLeft className="w-3.5 h-3.5 text-[#00DF00]" />
+              <ArrowLeft className={`w-3.5 h-3.5 ${isDark ? 'text-[#00DF00]' : 'text-[#087C3B]'}`} />
               <span className="hidden sm:inline">Início</span>
             </button>
 
-            <span className="text-zinc-600">/</span>
+            <span className={isDark ? 'text-zinc-600' : 'text-zinc-300'}>/</span>
 
             <button
               onClick={handleBackToOverview}
               className={`transition-colors flex items-center gap-1.5 ${
-                !selectedUniverseId ? 'text-[#00DF00] font-bold' : 'text-zinc-400 hover:text-white'
+                !selectedUniverseId
+                  ? isDark ? 'text-[#00DF00] font-bold' : 'text-[#087C3B] font-bold'
+                  : isDark ? 'text-zinc-400 hover:text-white' : 'text-[#4A6B5B] hover:text-[#172C22]'
               }`}
             >
               <Compass className="w-3.5 h-3.5" />
@@ -778,8 +782,8 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
 
             {activeUniverse && (
               <>
-                <span className="text-zinc-600">/</span>
-                <span className="text-[#00DF00] font-bold flex items-center gap-1.5 truncate">
+                <span className={isDark ? 'text-zinc-600' : 'text-zinc-300'}>/</span>
+                <span className={`${isDark ? 'text-[#00DF00]' : 'text-[#087C3B]'} font-bold flex items-center gap-1.5 truncate`}>
                   {renderUniverseIcon(activeUniverse.iconName, 'w-3.5 h-3.5')}
                   <span>{activeUniverse.name}</span>
                 </span>
@@ -788,8 +792,8 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
 
             {selectedProductId && (
               <>
-                <span className="text-zinc-600">/</span>
-                <span className="text-white font-semibold truncate">
+                <span className={isDark ? 'text-zinc-600' : 'text-zinc-300'}>/</span>
+                <span className={`${isDark ? 'text-white' : 'text-[#172C22]'} font-semibold truncate`}>
                   {activeProducts.find((p) => p.product.id === selectedProductId)?.product.name}
                 </span>
               </>
@@ -801,13 +805,52 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
             {selectedUniverseId && (
               <button
                 onClick={handleBackToOverview}
-                className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-zinc-300 hover:text-white hover:border-[#00DF00]/60 transition-all flex items-center gap-1.5 shadow-sm"
+                className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg border text-xs transition-all flex items-center gap-1.5 shadow-sm ${
+                  isDark
+                    ? 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:text-white hover:border-[#00DF00]/60'
+                    : 'bg-white border-[#B8D1C3] text-[#172C22] hover:border-[#087C3B]'
+                }`}
                 title="Voltar à visão geral dos 6 universos"
               >
-                <Compass className="w-3.5 h-3.5 text-[#00DF00]" />
+                <Compass className={`w-3.5 h-3.5 ${isDark ? 'text-[#00DF00]' : 'text-[#087C3B]'}`} />
                 <span>Visão Geral</span>
               </button>
             )}
+
+            {/* Discreet Zoom Controls */}
+            <div className={`hidden sm:flex items-center rounded-lg border p-0.5 shadow-sm ${
+              isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-[#B8D1C3]'
+            }`}>
+              <button
+                onClick={handleZoomIn}
+                className={`p-1.5 rounded transition-colors ${
+                  isDark ? 'text-zinc-300 hover:text-white hover:bg-zinc-800' : 'text-[#172C22] hover:bg-zinc-100'
+                }`}
+                title="Aproximar visualização"
+              >
+                <Plus className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={handleZoomOut}
+                className={`p-1.5 rounded transition-colors ${
+                  isDark ? 'text-zinc-300 hover:text-white hover:bg-zinc-800' : 'text-[#172C22] hover:bg-zinc-100'
+                }`}
+                title="Afastar visualização"
+              >
+                <Minus className="w-3.5 h-3.5" />
+              </button>
+              {isViewModified && (
+                <button
+                  onClick={handleResetView}
+                  className={`p-1.5 rounded transition-colors ${
+                    isDark ? 'text-[#00DF00] hover:bg-zinc-800' : 'text-[#087C3B] hover:bg-zinc-100'
+                  }`}
+                  title="Recentralizar visualização"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
           </div>
 
         </div>
@@ -892,6 +935,7 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
                 <g className="transition-opacity duration-500">
                   {(Object.keys(UNIVERSES) as UniverseId[]).map((uId) => {
                     const coord = getUniverseCoords(uId);
+                    const strokeCol = isDark ? '#00DF00' : '#087C3B';
                     return (
                       <g key={`conn-${uId}`}>
                         <line
@@ -899,15 +943,15 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
                           y1="0"
                           x2={coord.x}
                           y2={coord.y}
-                          stroke="#00DF00"
-                          strokeWidth="1.2"
-                          strokeOpacity="0.35"
+                          stroke={strokeCol}
+                          strokeWidth={isDark ? '1.2' : '1.5'}
+                          strokeOpacity={isDark ? '0.35' : '0.40'}
                           strokeDasharray="4 3"
                         />
 
                         {/* Data particle (rendered in overview) */}
                         {!prefersReducedMotion && (
-                          <circle r="2" fill="#00DF00">
+                          <circle r={isDark ? '2' : '2.2'} fill={strokeCol}>
                             <animateMotion
                               path={`M 0 0 L ${coord.x} ${coord.y}`}
                               dur="4s"
@@ -956,30 +1000,33 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
                       const midY = (originY + destY) / 2;
                       curvePath = `M ${originX} ${originY} C ${originX} ${midY}, ${destX} ${midY}, ${destX} ${destY}`;
                     } else {
-                      // Desktop Bilateral Port Routing (Unchanged!)
-                      const universeHalfWidth = 105;
+                      // Desktop Bilateral Port Routing (Expanded for wider node)
+                      const universeHalfWidth = 130;
                       originX = pos.isLeft ? center.x - universeHalfWidth : center.x + universeHalfWidth;
                       originY = center.y;
                       destX = pos.edgeX;
                       destY = pos.edgeY;
-                      const controlOffset = 30;
+                      const controlOffset = 35;
                       const controlX1 = pos.isLeft ? originX - controlOffset : originX + controlOffset;
                       const controlX2 = pos.isLeft ? destX + controlOffset : destX - controlOffset;
                       curvePath = `M ${originX} ${originY} C ${controlX1} ${originY}, ${controlX2} ${destY}, ${destX} ${destY}`;
                     }
 
                     // Dynamic stroke styling based on interaction state
-                    let strokeWidth = '1.2';
-                    let strokeOpacity = '0.35';
+                    const strokeCol = isDark ? '#00DF00' : '#087C3B';
+                    const pulseCol = isDark ? '#00FF00' : '#087C3B';
+
+                    let strokeWidth = isDark ? '1.3' : '1.6';
+                    let strokeOpacity = isDark ? '0.35' : '0.40';
                     if (isSolSelected) {
-                      strokeWidth = '2.5';
-                      strokeOpacity = '0.95';
+                      strokeWidth = isDark ? '2.8' : '3.0';
+                      strokeOpacity = '1.0';
                     } else if (isHovered) {
-                      strokeWidth = '2.2';
-                      strokeOpacity = '0.9';
+                      strokeWidth = isDark ? '2.4' : '2.6';
+                      strokeOpacity = '0.95';
                     } else if (isOtherHovered) {
                       strokeWidth = '0.9';
-                      strokeOpacity = '0.15';
+                      strokeOpacity = isDark ? '0.15' : '0.20';
                     }
 
                     return (
@@ -987,11 +1034,11 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
                         {/* Curved Data Bus */}
                         <path
                           d={curvePath}
-                          stroke="#00DF00"
+                          stroke={strokeCol}
                           strokeWidth={strokeWidth}
                           strokeOpacity={strokeOpacity}
                           fill="none"
-                          filter={isTargeted ? 'url(#neonFilter)' : undefined}
+                          filter={isTargeted && isDark ? 'url(#neonFilter)' : undefined}
                           className="transition-all duration-300"
                         />
 
@@ -999,9 +1046,9 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
                         <circle
                           cx={originX}
                           cy={originY}
-                          r={isTargeted ? 3 : 1.5}
-                          fill="#00DF00"
-                          fillOpacity={isTargeted ? 0.9 : isOtherHovered ? 0.15 : 0.35}
+                          r={isTargeted ? 3.5 : 2}
+                          fill={strokeCol}
+                          fillOpacity={isTargeted ? 0.95 : isOtherHovered ? 0.15 : 0.40}
                           className="transition-all duration-300"
                         />
 
@@ -1009,10 +1056,10 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
                         <circle
                           cx={destX}
                           cy={destY}
-                          r={isTargeted ? 3.5 : 2}
-                          fill="#00DF00"
+                          r={isTargeted ? 4 : 2.5}
+                          fill={strokeCol}
                           fillOpacity={isTargeted ? 1 : isOtherHovered ? 0.15 : 0.45}
-                          filter={isTargeted ? 'url(#neonFilter)' : undefined}
+                          filter={isTargeted && isDark ? 'url(#neonFilter)' : undefined}
                           className="transition-all duration-300"
                         />
 
@@ -1022,7 +1069,7 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
                             {isTargeted ? (
                               <g>
                                 {/* Quick energetic pulse circle on targeted / hovered connection */}
-                                <circle r={isHovered ? '2.8' : '2.4'} fill="#00FF00" filter="url(#neonFilter)">
+                                <circle r={isHovered ? '3' : '2.5'} fill={pulseCol} filter={isDark ? 'url(#neonFilter)' : undefined}>
                                   <animateMotion
                                     path={curvePath}
                                     dur={isHovered ? '1.1s' : '1.5s'}
@@ -1030,7 +1077,7 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
                                   />
                                 </circle>
                                 {/* Soft glow aura halo */}
-                                <circle r="4.5" fill="#00DF00" opacity="0.35" filter="url(#neonFilter)">
+                                <circle r="4.5" fill={strokeCol} opacity={isDark ? '0.35' : '0.25'} filter={isDark ? 'url(#neonFilter)' : undefined}>
                                   <animateMotion
                                     path={curvePath}
                                     dur={isHovered ? '1.1s' : '1.5s'}
@@ -1040,7 +1087,7 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
                               </g>
                             ) : !isOtherHovered ? (
                               /* Gentle ambient pulse when idle */
-                              <circle r="1.6" fill="#00DF00" opacity="0.4">
+                              <circle r="1.8" fill={strokeCol} opacity={isDark ? '0.4' : '0.45'}>
                                 <animateMotion
                                   path={curvePath}
                                   dur="3.2s"
@@ -1073,14 +1120,24 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
                   : 'opacity-100 scale-100 cursor-pointer'
               }`}
             >
-              <div className="absolute w-36 sm:w-40 h-36 sm:h-40 rounded-full bg-[#00DF00]/10 blur-xl pointer-events-none animate-pulse-subtle" />
-              <div className="relative w-22 sm:w-28 h-22 sm:h-28 rounded-2xl sm:rounded-3xl bg-gradient-to-b from-zinc-900 via-zinc-950 to-black border-2 border-[#00DF00] flex flex-col items-center justify-center p-2.5 sm:p-3 shadow-[0_0_35px_rgba(0,223,0,0.4)] hover:shadow-[0_0_45px_rgba(0,223,0,0.65)] hover:border-[#00ff00] transition-all duration-300">
+              <div className={`absolute w-38 sm:w-44 h-38 sm:h-44 rounded-full blur-xl pointer-events-none animate-pulse-subtle ${
+                isDark ? 'bg-[#00DF00]/10' : 'bg-[#087C3B]/10'
+              }`} />
+              <div className={`relative w-24 sm:w-30 h-24 sm:h-30 rounded-2xl sm:rounded-3xl border-2 flex flex-col items-center justify-center p-2.5 sm:p-3 transition-all duration-300 ${
+                isDark
+                  ? 'bg-gradient-to-b from-[#19282E] via-[#131F24] to-[#0B1115] border-[#00DF00] shadow-[0_0_35px_rgba(0,223,0,0.4)] hover:shadow-[0_0_45px_rgba(0,223,0,0.65)] hover:border-[#00ff00]'
+                  : 'bg-white border-[#087C3B] shadow-[0_4px_25px_rgba(8,124,59,0.25)] hover:shadow-[0_6px_35px_rgba(8,124,59,0.35)] hover:border-[#0A9446]'
+              }`}>
                 <img
-                  src="/assets/wbm-logo-clean.png"
+                  src="/assets/WBM_LOGO_3D_HORIZONTAL.png"
                   alt="WBM Technology"
-                  className="w-16 sm:w-20 h-auto object-contain drop-shadow-[0_0_12px_rgba(0,223,0,0.5)]"
+                  className={`w-18 sm:w-22 h-auto object-contain transition-all ${
+                    isDark ? 'drop-shadow-[0_0_12px_rgba(0,223,0,0.5)]' : 'drop-shadow-[0_2px_6px_rgba(8,124,59,0.3)]'
+                  }`}
                 />
-                <span className="text-[8px] sm:text-[9px] font-mono tracking-widest text-[#00DF00] uppercase mt-0.5 sm:mt-1">
+                <span className={`text-[8.5px] sm:text-[9.5px] font-mono font-bold tracking-widest uppercase mt-0.5 sm:mt-1 ${
+                  isDark ? 'text-[#00DF00]' : 'text-[#087C3B]'
+                }`}>
                   NÚCLEO IoT
                 </span>
               </div>
@@ -1118,48 +1175,62 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
                     <div
                       className={`absolute -inset-2 rounded-2xl transition-all duration-300 pointer-events-none ${
                         isSelected
-                          ? 'bg-[#00DF00]/25 blur-md'
-                          : 'group-hover:bg-[#00DF00]/15 group-hover:blur-sm'
+                          ? isDark ? 'bg-[#00DF00]/25 blur-md' : 'bg-[#087C3B]/20 blur-md'
+                          : isDark ? 'group-hover:bg-[#00DF00]/15 group-hover:blur-sm' : 'group-hover:bg-[#087C3B]/10 group-hover:blur-sm'
                       }`}
                     />
 
                     {/* Universe Node Card */}
                     <div
-                      className={`relative flex items-center gap-2 sm:gap-3 px-2 sm:px-3.5 py-1.5 sm:py-2.5 rounded-2xl backdrop-blur-md border transition-all duration-300 shadow-xl ${
+                      className={`relative flex items-center gap-2.5 sm:gap-3.5 px-2.5 sm:px-4 py-2 sm:py-3 rounded-2xl backdrop-blur-md border transition-all duration-300 shadow-xl ${
                         isMobile
                           ? isSelected
                             ? 'w-[172px] min-w-[172px]'
                             : 'w-[152px] min-w-[152px]'
-                          : 'w-[210px] min-w-[210px]'
+                          : 'w-[245px] sm:w-[265px] min-w-[245px]'
                       } ${
                         isSelected
-                          ? 'bg-zinc-900 border-[#00DF00] shadow-[0_0_30px_rgba(0,223,0,0.5)]'
-                          : 'bg-zinc-950/95 border-zinc-800 group-hover:border-[#00DF00]/70'
+                          ? isDark
+                            ? 'bg-[#19282E] border-[#00DF00] shadow-[0_0_30px_rgba(0,223,0,0.5)]'
+                            : 'bg-white border-[#087C3B] ring-2 ring-[#087C3B]/30 shadow-[0_4px_25px_rgba(8,124,59,0.25)]'
+                          : isDark
+                          ? 'bg-[#131F24]/95 border-[#2A423A] group-hover:border-[#00DF00]/70 group-hover:bg-[#19282E]'
+                          : 'bg-white border-[#B8D1C3] group-hover:border-[#087C3B] group-hover:bg-[#FFFFFF] shadow-[0_4px_16px_rgba(8,124,59,0.08)] hover:shadow-[0_8px_24px_rgba(8,124,59,0.16)]'
                       }`}
                     >
                       <div
                         className={`rounded-xl flex items-center justify-center shrink-0 transition-transform duration-300 ${
-                          isMobile ? 'w-7 h-7' : 'w-10 h-10'
+                          isMobile ? 'w-7 h-7' : 'w-10 h-10 sm:w-11 sm:h-11'
                         } ${
                           isSelected
-                            ? 'bg-[#00DF00] text-black shadow-[0_0_15px_rgba(0,223,0,0.6)]'
-                            : 'bg-[#00DF00]/15 text-[#00DF00] border border-[#00DF00]/40 group-hover:scale-110'
+                            ? isDark
+                              ? 'bg-[#00DF00] text-black shadow-[0_0_15px_rgba(0,223,0,0.6)]'
+                              : 'bg-[#087C3B] text-white shadow-[0_2px_10px_rgba(8,124,59,0.4)]'
+                            : isDark
+                            ? 'bg-[#00DF00]/15 text-[#00DF00] border border-[#00DF00]/40 group-hover:scale-105'
+                            : 'bg-[#D7EBDD] text-[#087C3B] border border-[#B8D1C3] group-hover:scale-105'
                         }`}
                       >
                         {renderUniverseIcon(u.iconName, isMobile ? 'w-3.5 h-3.5' : 'w-5 h-5')}
                       </div>
 
                       <div className="text-left flex-1 min-w-0">
-                        <h3 className="text-[11px] sm:text-sm font-extrabold text-white font-heading tracking-wide leading-tight line-clamp-2">
+                        <h3 className={`text-xs sm:text-[15px] font-extrabold font-heading tracking-wide leading-snug line-clamp-2 ${
+                          isDark ? 'text-white' : 'text-[#172C22]'
+                        }`}>
                           {u.name}
                         </h3>
-                        <p className="text-[9px] sm:text-[10px] text-zinc-400 font-mono mt-0.5">
+                        <p className={`text-[9.5px] sm:text-xs font-mono mt-0.5 ${
+                          isDark ? 'text-[#A0BDB0]' : 'text-[#4A6B5B]'
+                        }`}>
                           {count} {count === 1 ? 'Solução' : 'Soluções'}
                         </p>
                       </div>
 
                       <ChevronRight
-                        className={`w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#00DF00] shrink-0 transition-transform duration-300 ${
+                        className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 transition-transform duration-300 ${
+                          isDark ? 'text-[#00DF00]' : 'text-[#087C3B]'
+                        } ${
                           isSelected ? 'rotate-90' : 'group-hover:translate-x-0.5'
                         }`}
                       />
@@ -1210,47 +1281,63 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
                       className="absolute -translate-x-1/2 -translate-y-1/2 z-30 cursor-pointer group outline-none"
                     >
                       <div
-                        className={`relative flex items-center justify-between gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl border backdrop-blur-md transition-all duration-300 shadow-md ${
-                          isMobile ? 'w-[156px] min-w-[156px]' : 'w-[264px] min-w-[264px]'
+                        className={`relative flex items-center justify-between gap-2.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border backdrop-blur-md transition-all duration-300 shadow-md ${
+                          isMobile
+                            ? 'w-[156px] min-w-[156px]'
+                            : 'w-[300px] sm:w-[335px] xl:w-[355px] min-w-[300px] min-h-[56px] sm:min-h-[62px]'
                         } ${
                           isSolSelected
-                            ? 'bg-[#00DF00] text-black border-[#00DF00] shadow-[0_0_22px_rgba(0,223,0,0.65)] scale-105'
+                            ? isDark
+                              ? 'bg-[#00DF00] text-black border-[#00DF00] shadow-[0_0_24px_rgba(0,223,0,0.65)] scale-105'
+                              : 'bg-[#087C3B] text-white border-[#087C3B] shadow-[0_4px_20px_rgba(8,124,59,0.45)] scale-105'
                             : isHovered
-                            ? 'bg-zinc-900/95 text-white border-[#00DF00] shadow-[0_0_16px_rgba(0,223,0,0.35)] scale-102 ring-1 ring-[#00DF00]/50'
+                            ? isDark
+                              ? 'bg-[#19282E] text-white border-[#00DF00] shadow-[0_0_18px_rgba(0,223,0,0.35)] scale-102 ring-1 ring-[#00DF00]/50'
+                              : 'bg-[#F8FCFA] text-[#172C22] border-[#087C3B] shadow-[0_2px_12px_rgba(8,124,59,0.25)] scale-102 ring-1 ring-[#087C3B]/40'
                             : isOtherHovered
-                            ? 'bg-zinc-950/85 border-zinc-800/60 text-zinc-400 opacity-65 scale-98'
-                            : 'bg-zinc-950/95 border-zinc-700/80 text-zinc-200 hover:border-[#00DF00] hover:text-white hover:scale-102 hover:shadow-[0_0_12px_rgba(0,223,0,0.25)]'
+                            ? isDark
+                              ? 'bg-[#131F24]/80 border-[#2A423A]/60 text-zinc-400 opacity-60 scale-98'
+                              : 'bg-white/80 border-[#B8D1C3]/60 text-zinc-400 opacity-60 scale-98'
+                            : isDark
+                            ? 'bg-[#131F24]/95 border-[#2A423A] text-[#F5FAF7] hover:border-[#00DF00] hover:text-white hover:scale-102 hover:shadow-[0_0_14px_rgba(0,223,0,0.25)]'
+                            : 'bg-white border-[#B8D1C3] text-[#172C22] hover:border-[#087C3B] hover:scale-102 hover:shadow-[0_4px_16px_rgba(8,124,59,0.18)] shadow-[0_2px_10px_rgba(8,124,59,0.08)]'
                         }`}
                       >
-                        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
                           <div
-                            className={`w-1.5 h-1.5 rounded-full shrink-0 transition-all duration-300 ${
+                            className={`w-2 h-2 rounded-full shrink-0 transition-all duration-300 ${
                               isSolSelected
-                                ? 'bg-black shadow-[0_0_6px_#000000]'
+                                ? isDark
+                                  ? 'bg-black shadow-[0_0_6px_#000000]'
+                                  : 'bg-white shadow-[0_0_6px_rgba(255,255,255,0.8)]'
                                 : isHovered
-                                ? 'bg-[#00DF00] shadow-[0_0_8px_#00FF00] scale-125'
-                                : 'bg-[#00DF00]/70 shadow-[0_0_4px_#00DF00]'
+                                ? isDark
+                                  ? 'bg-[#00DF00] shadow-[0_0_8px_#00FF00] scale-125'
+                                  : 'bg-[#087C3B] shadow-[0_0_6px_rgba(8,124,59,0.6)] scale-125'
+                                : isDark
+                                ? 'bg-[#00DF00]/70 shadow-[0_0_4px_#00DF00]'
+                                : 'bg-[#087C3B]/70'
                             }`}
                           />
                           <div className="min-w-0 flex-1 text-left">
                             <span
-                              className={`text-[10.5px] sm:text-xs font-bold tracking-tight block truncate font-heading transition-colors ${
+                              className={`text-[12px] sm:text-[14.5px] lg:text-[15.5px] font-bold tracking-tight block font-heading leading-tight line-clamp-2 transition-colors ${
                                 isSolSelected
-                                  ? 'text-black'
+                                  ? isDark ? 'text-black font-extrabold' : 'text-white font-extrabold'
                                   : isHovered
-                                  ? 'text-white'
-                                  : 'text-zinc-200'
+                                  ? isDark ? 'text-white' : 'text-[#172C22]'
+                                  : isDark ? 'text-[#F5FAF7]' : 'text-[#172C22]'
                               }`}
                             >
                               {product.name}
                             </span>
                             <span
-                              className={`text-[9px] sm:text-[10px] block truncate font-medium tracking-tight transition-colors ${
+                              className={`text-[10px] sm:text-[11.5px] lg:text-[12px] block font-medium tracking-tight mt-0.5 leading-snug line-clamp-2 whitespace-normal break-words transition-colors ${
                                 isSolSelected
-                                  ? 'text-black/85 font-semibold'
+                                  ? isDark ? 'text-black/85 font-semibold' : 'text-white/90 font-semibold'
                                   : isHovered
-                                  ? 'text-[#00DF00] font-semibold'
-                                  : 'text-[#00DF00]/90'
+                                  ? isDark ? 'text-[#00DF00] font-semibold' : 'text-[#087C3B] font-semibold'
+                                  : isDark ? 'text-[#69F28B]' : 'text-[#087C3B]'
                               }`}
                             >
                               {context.shortLabelOverride || product.shortLabel}
@@ -1259,12 +1346,12 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
                         </div>
 
                         <ChevronRight
-                          className={`w-3 h-3 shrink-0 transition-all duration-300 ${
+                          className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 transition-all duration-300 ${
                             isSolSelected
-                              ? 'text-black opacity-90'
+                              ? isDark ? 'text-black opacity-90' : 'text-white opacity-95'
                               : isHovered
-                              ? 'text-[#00DF00] opacity-100 translate-x-0.5'
-                              : 'text-[#00DF00] opacity-50 group-hover:opacity-100'
+                              ? isDark ? 'text-[#00DF00] opacity-100 translate-x-0.5' : 'text-[#087C3B] opacity-100 translate-x-0.5'
+                              : isDark ? 'text-[#00DF00] opacity-60 group-hover:opacity-100' : 'text-[#087C3B] opacity-60 group-hover:opacity-100'
                           }`}
                         />
                       </div>
@@ -1401,13 +1488,19 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
                   }}
                   className={`shrink-0 px-2.5 py-1 rounded-lg text-[11px] font-medium border transition-all flex items-center gap-1.5 ${
                     isCurrent
-                      ? 'bg-[#00DF00] text-black border-[#00DF00] font-bold shadow-[0_0_10px_rgba(0,223,0,0.5)]'
-                      : 'bg-zinc-900/90 text-zinc-300 border-zinc-800 hover:border-[#00DF00]/60 active:scale-95'
+                      ? isDark
+                        ? 'bg-[#00DF00] text-black border-[#00DF00] font-bold shadow-[0_0_10px_rgba(0,223,0,0.5)]'
+                        : 'bg-[#087C3B] text-white border-[#087C3B] font-bold shadow-[0_2px_8px_rgba(8,124,59,0.3)]'
+                      : isDark
+                      ? 'bg-zinc-900/90 text-zinc-300 border-zinc-800 hover:border-[#00DF00]/60 active:scale-95'
+                      : 'bg-white text-[#172C22] border-[#B8D1C3] hover:border-[#087C3B] active:scale-95 shadow-sm'
                   }`}
                 >
                   <span
                     className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                      isCurrent ? 'bg-black' : 'bg-[#00DF00]'
+                      isCurrent
+                        ? isDark ? 'bg-black' : 'bg-white'
+                        : isDark ? 'bg-[#00DF00]' : 'bg-[#087C3B]'
                     }`}
                   />
                   <span className="truncate max-w-[130px] font-heading">{product.name}</span>
@@ -1421,19 +1514,23 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
   )}
 
       {/* Bottom Informational Bar / Selected Solution Context */}
-      <footer className={`relative z-30 w-full bg-black/90 backdrop-blur-md border-t border-zinc-900 px-4 sm:px-8 py-2.5 select-text ${
+      <footer className={`relative z-30 w-full backdrop-blur-md border-t px-4 sm:px-8 py-2.5 select-text transition-colors duration-200 ${
         isMobile && selectedUniverseId ? 'hidden' : 'block'
+      } ${
+        isDark ? 'bg-[#0B1115]/90 border-zinc-900 text-zinc-400' : 'bg-white/95 border-[#B8D1C3] text-[#4A6B5B]'
       }`}>
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-2.5 text-xs">
           
           {/* Status and Active Context Summary */}
           <div className="flex items-center gap-3">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-300 font-mono">
-              <span className="w-2 h-2 rounded-full bg-[#00DF00] animate-pulse" />
+            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border font-mono ${
+              isDark ? 'bg-zinc-900 border-zinc-800 text-zinc-300' : 'bg-[#D7EBDD] border-[#B8D1C3] text-[#172C22]'
+            }`}>
+              <span className={`w-2 h-2 rounded-full animate-pulse ${isDark ? 'bg-[#00DF00]' : 'bg-[#087C3B]'}`} />
               {activeUniverse ? activeUniverse.name.toUpperCase() : 'MAPA DE UNIVERSOS'}
             </span>
 
-            <p className="text-zinc-400 hidden sm:inline truncate max-w-xl">
+            <p className={`hidden sm:inline truncate max-w-xl ${isDark ? 'text-zinc-400' : 'text-[#4A6B5B]'}`}>
               {activeUniverse
                 ? activeUniverse.description
                 : 'Selecione um universo para explorar os desafios operacionais e as soluções WBM'}
@@ -1441,7 +1538,7 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
           </div>
 
           {/* Solution Count & Guidance */}
-          <div className="flex items-center gap-4 text-zinc-400">
+          <div className={`flex items-center gap-4 ${isDark ? 'text-zinc-400' : 'text-[#4A6B5B]'}`}>
             {selectedUniverseId ? (
               <span>
                 {activeProducts.length} soluções mapeadas para {activeUniverse?.name}
@@ -1453,7 +1550,7 @@ export const PortfolioMode: React.FC<PortfolioModeProps> = ({
             {selectedUniverseId && (
               <button
                 onClick={handleBackToOverview}
-                className="text-[#00DF00] hover:underline font-medium"
+                className={`hover:underline font-medium ${isDark ? 'text-[#00DF00]' : 'text-[#087C3B]'}`}
               >
                 Voltar ao mapa geral
               </button>

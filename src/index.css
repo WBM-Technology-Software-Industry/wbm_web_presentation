@@ -2,12 +2,60 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* Light Tech Mode — Industrial Engineering Palette (Etapa D.1.4) */
+  --wbm-bg: #E6EFEB;
+  --wbm-bg-secondary: #EDF4F0;
+  --wbm-bg-card: #FFFFFF;
+  --wbm-bg-elevated: #FFFFFF;
+  --wbm-bg-surface: #F4F8F6;
+  --wbm-bg-hover: #D7EBDD;
+  --wbm-border: #B8D1C3;
+  --wbm-border-hover: #087C3B;
+  --wbm-text: #172C22;
+  --wbm-text-secondary: #4A6B5B;
+  --wbm-text-muted: #6B8B7B;
+  --wbm-accent: #087C3B;
+  --wbm-accent-highlight: #0A9446;
+  --wbm-accent-soft: #D7EBDD;
+  --wbm-accent-glow: rgba(8, 124, 59, 0.20);
+  --wbm-conn-active: #087C3B;
+  --wbm-conn-line: rgba(8, 124, 59, 0.45);
+}
+
+.dark, [data-theme="dark"] {
+  /* Dark Tech Mode (Default) */
+  --wbm-bg: #0B1115;
+  --wbm-bg-card: #131F24;
+  --wbm-bg-elevated: #19282E;
+  --wbm-bg-hover: #21343A;
+  --wbm-border: #2A423A;
+  --wbm-border-hover: #00DF00;
+  --wbm-text: #F5FAF7;
+  --wbm-text-secondary: #A0BDB0;
+  --wbm-text-muted: #6B887B;
+  --wbm-accent: #00DF00;
+  --wbm-accent-light: #69F28B;
+  --wbm-accent-glow: rgba(0, 223, 0, 0.45);
+  --wbm-conn-active: #00DF00;
+  --wbm-conn-line: rgba(0, 223, 0, 0.35);
+}
+
 @layer base {
   html {
+    color-scheme: light;
+  }
+  html.dark {
     color-scheme: dark;
   }
   body {
-    @apply bg-black text-white selection:bg-[#00DF00] selection:text-black;
+    background-color: var(--wbm-bg);
+    color: var(--wbm-text);
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+  ::selection {
+    background-color: var(--wbm-accent);
+    color: #000000;
   }
 }
 
